@@ -124,12 +124,13 @@
 
   .btn{
     background:var(--amber);color:#1A1305;border:none;padding:8px 14px;border-radius:6px;
-    font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--body);
+    font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--body);display:inline-flex;align-items:center;gap:6px;
   }
   .btn:hover{background:#f5952b;}
   .btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
   .btn.secondary:hover{border-color:var(--text-dim);}
   .btn.danger{background:transparent;color:var(--rust);border:1px solid var(--rust);}
+  .btn.sm{padding:4px 9px;font-size:11.5px;}
 
   .table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
@@ -167,6 +168,12 @@
   .badge.backup{background:#2A2A2A;color:#B0A995;}
   .badge.local{background:#2A2A2A;color:#B0A995;}
   .badge.synced{background:#233A2C;color:#8FCB9F;}
+  
+  /* Attendance Badges */
+  .badge.present{background:#233A2C;color:#8FCB9F;border:1px solid rgba(143,203,159,0.3);}
+  .badge.late{background:#3A2E1C;color:#E8C285;border:1px solid rgba(232,194,133,0.3);}
+  .badge.absent{background:#3A1F1A;color:#E8A38F;border:1px solid rgba(232,163,143,0.3);}
+  .badge.off{background:#2A2A2A;color:#B0A995;}
 
   .alert-row{
     display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:7px;
@@ -216,6 +223,33 @@
   }
   .install-btn:hover{border-color:var(--amber);}
 
+  /* Calendar & Attendance Sub-Navigation Styles */
+  .tab-pills{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+  .tab-pill{
+    padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:500;cursor:pointer;
+    background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);
+    transition:all .15s;
+  }
+  .tab-pill:hover{color:var(--text);border-color:var(--text-dim);}
+  .tab-pill.active{background:var(--amber-dim);border-color:var(--amber);color:var(--text);}
+  
+  .calendar-bar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    padding:12px 16px;margin-bottom:16px;
+  }
+  .date-controls{display:flex;align-items:center;gap:8px;}
+  .date-display{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:0.3px;}
+  .cal-picker{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    padding:6px 10px;border-radius:6px;font-size:12.5px;font-family:var(--mono);cursor:pointer;
+  }
+  .time-badge{font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg);padding:3px 7px;border-radius:4px;border:1px solid var(--border);}
+  .time-input-inline{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 6px;
+    border-radius:4px;font-size:12px;font-family:var(--mono);width:100px;
+  }
+
   /* ---------- mobile ---------- */
   @media (max-width: 780px){
     .app{ flex-direction:column; min-height:auto; }
@@ -248,6 +282,7 @@
     .panel{ padding:14px 14px; }
     .modal{ max-width:100%; width:100%; height:100%; max-height:100%; border-radius:0; }
     .pulse-strip{ flex-wrap:wrap; gap:8px; width:100%; }
+    .calendar-bar{ flex-direction:column; align-items:flex-start; }
   }
 </style>
 <link rel="manifest" href="manifest.json">
@@ -283,6 +318,7 @@ const TABLE_MAPS = {
   shipments: {table:'shipments', fields:{materialName:'material_name', route:'route', mode:'mode', legStatus:'leg_status', expectedDate:'expected_date', actualDate:'actual_date', weatherFlag:'weather_flag', freight:'freight', fuelSurcharge:'fuel_surcharge', demurrage:'demurrage', handling:'handling', insurance:'insurance'}},
   fuel: {table:'fuel_log', fields:{date:'date', type:'type', liters:'liters', cost:'cost', notes:'notes'}},
   workforce: {table:'workforce', fields:{name:'name', trade:'trade', rotationIn:'rotation_in', rotationOut:'rotation_out', certName:'cert_name', certExpiry:'cert_expiry', status:'status'}},
+  attendance: {table:'workforce_attendance', fields:{workerId:'worker_id', workerName:'worker_name', date:'date', status:'status', timeIn:'time_in', timeOut:'time_out', hoursWorked:'hours_worked', notes:'notes'}},
   activities: {table:'activities', fields:{name:'name', costCode:'cost_code', budget:'budget', committed:'committed', inTransit:'in_transit', installed:'installed', linkedShipmentId:'linked_shipment_id'}},
   fieldReports: {table:'field_reports', fields:{date:'date', type:'type', description:'description', photoCount:'photo_count', photoUrls:'photo_urls'}},
 };
@@ -380,11 +416,11 @@ function useStore(){
 
   const loadAll = async () => {
     try{
-      const [materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings] = await Promise.all([
+      const [materials, suppliers, shipments, fuel, workforce, attendance, activities, fieldReports, settings] = await Promise.all([
         sbFetchAll('materials'), sbFetchAll('suppliers'), sbFetchAll('shipments'), sbFetchAll('fuel'),
-        sbFetchAll('workforce'), sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
+        sbFetchAll('workforce'), sbFetchAll('attendance').catch(()=>[]), sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
       ]);
-      const next = {materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings};
+      const next = {materials, suppliers, shipments, fuel, workforce, attendance: attendance||[], activities, fieldReports, settings};
       setData(next);
       writeCache(next);
       setSyncedAt(new Date());
@@ -392,6 +428,7 @@ function useStore(){
     }catch(e){
       const cached = readCache();
       if(cached){
+        if(!cached.attendance) cached.attendance = [];
         setData(cached);
         setError(navigator.onLine ? ((e && e.message) || 'Could not reach Supabase — showing last saved data.') : null);
       } else {
@@ -450,7 +487,12 @@ function useStore(){
     if(action === 'insert'){
       const tempId = 'local-' + uid();
       const optimistic = {...payload, id: tempId, _pending:true};
-      setData(prev => { const next = {...prev, [stateKey]: [...prev[stateKey], optimistic]}; writeCache(next); return next; });
+      setData(prev => { 
+        const currentList = prev[stateKey] || [];
+        const next = {...prev, [stateKey]: [...currentList, optimistic]}; 
+        writeCache(next); 
+        return next; 
+      });
       if(navigator.onLine){
         try{
           const created = await sbInsert(stateKey, payload);
@@ -461,7 +503,12 @@ function useStore(){
         enqueue({qid:uid(), stateKey, action:'insert', tempId, payload});
       }
     } else if(action === 'update'){
-      setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r=>r.id===payload.id?{...r,...payload,_pending: isTemp(payload.id)||!navigator.onLine||r._pending}:r)}; writeCache(next); return next; });
+      setData(prev => { 
+        const currentList = prev[stateKey] || [];
+        const next = {...prev, [stateKey]: currentList.map(r=>r.id===payload.id?{...r,...payload,_pending: isTemp(payload.id)||!navigator.onLine||r._pending}:r)}; 
+        writeCache(next); 
+        return next; 
+      });
       if(navigator.onLine && !isTemp(payload.id)){
         try{
           const updated = await sbUpdate(stateKey, payload.id, payload);
@@ -472,7 +519,12 @@ function useStore(){
         enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload});
       }
     } else if(action === 'delete'){
-      setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].filter(r => r.id !== payload)}; writeCache(next); return next; });
+      setData(prev => { 
+        const currentList = prev[stateKey] || [];
+        const next = {...prev, [stateKey]: currentList.filter(r => r.id !== payload)}; 
+        writeCache(next); 
+        return next; 
+      });
       if(navigator.onLine && !isTemp(payload)){
         try{
           await sbDelete(stateKey, payload);
@@ -1124,9 +1176,78 @@ function Transportation({data, mutate, mutateSettings}){
   );
 }
 
-/* ---------- module: Workforce ---------- */
+/* ---------- module: Workforce with Attendance & Calendar ---------- */
 function Workforce({data, mutate}){
-  const cols = [
+  const [subTab, setSubTab] = useState('attendance'); // 'attendance' | 'registry'
+  const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [editModal, setEditModal] = useState(null); // null | {worker, record}
+  const [modalForm, setModalForm] = useState({status:'Present', timeIn:'07:00', timeOut:'17:00', notes:''});
+
+  const goYesterday = () => setSelectedDate(addDays(selectedDate, -1));
+  const goToday = () => setSelectedDate(todayISO());
+  const goTomorrow = () => setSelectedDate(addDays(selectedDate, 1));
+
+  // Quick date label
+  const isToday = selectedDate === todayISO();
+  const isYesterday = selectedDate === addDays(todayISO(), -1);
+  const dateLabel = isToday ? 'Today' : isYesterday ? 'Yesterday' : fmtDate(selectedDate);
+
+  // Filter attendance for currently selected date
+  const attendanceList = (data.attendance || []).filter(a => a.date === selectedDate);
+  const attendanceMap = {};
+  attendanceList.forEach(a => { attendanceMap[a.workerId] = a; });
+
+  // Calculate work hours
+  const calcHours = (tin, tout) => {
+    if(!tin || !tout) return null;
+    const [h1, m1] = tin.split(':').map(Number);
+    const [h2, m2] = tout.split(':').map(Number);
+    let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if(diff < 0) diff += 24 * 60;
+    return (diff / 60).toFixed(1);
+  };
+
+  const handleSaveAttendance = (workerId, workerName, updates) => {
+    const existing = attendanceMap[workerId];
+    const hours = calcHours(updates.timeIn, updates.timeOut) || updates.hoursWorked || 0;
+    const payload = {
+      workerId,
+      workerName,
+      date: selectedDate,
+      status: updates.status || 'Present',
+      timeIn: updates.timeIn ?? '07:00',
+      timeOut: updates.timeOut ?? '17:00',
+      hoursWorked: Number(hours),
+      notes: updates.notes || ''
+    };
+
+    if(existing){
+      mutate('attendance', 'update', {...existing, ...payload});
+    } else {
+      mutate('attendance', 'insert', payload);
+    }
+  };
+
+  const markAllOnSitePresent = () => {
+    data.workforce.forEach(w => {
+      if(w.status === 'On Site'){
+        const existing = attendanceMap[w.id];
+        if(!existing || existing.status === 'Absent'){
+          handleSaveAttendance(w.id, w.name, {status:'Present', timeIn:'07:00', timeOut:'17:00'});
+        }
+      }
+    });
+  };
+
+  // KPIs for the selected date
+  const presentCount = attendanceList.filter(a => a.status === 'Present').length;
+  const lateCount = attendanceList.filter(a => a.status === 'Late').length;
+  const absentCount = attendanceList.filter(a => a.status === 'Absent').length;
+  const totalHours = attendanceList.reduce((s,a)=>s+Number(a.hoursWorked||0), 0);
+  const onSiteCount = data.workforce.filter(w=>w.status==='On Site').length;
+
+  // Registry columns
+  const registryCols = [
     {key:'name', label:'Worker', field:{required:true}},
     {key:'trade', label:'Trade / Role', field:{required:true}},
     {key:'rotationIn', label:'Rotation In', field:{type:'date', required:true}, render:r=>fmtDate(r.rotationIn)},
@@ -1136,20 +1257,228 @@ function Workforce({data, mutate}){
       const soon = r.certExpiry && daysBetween(todayISO(), r.certExpiry) <= (data.settings.certAlertDays||30);
       return <span style={{color: soon ? '#E8A38F':'inherit'}}>{fmtDate(r.certExpiry)}</span>;
     }},
-    {key:'status', label:'Status', field:{type:'select', options:['On Site','Off Rotation'], required:true}, render:r=><span className={"badge "+slug(r.status)}>{r.status}</span>},
+    {key:'status', label:'Deployment Status', field:{type:'select', options:['On Site','Off Rotation'], required:true}, render:r=><span className={"badge "+slug(r.status)}>{r.status}</span>},
   ];
-  const onSiteCount = data.workforce.filter(w=>w.status==='On Site').length;
 
   return (
-    <DataTable
-      title="Workforce & Certification Registry (2-on/2-off)"
-      sub={`${onSiteCount} on site now · certs auto-flag if expiring within ${data.settings.certAlertDays||30} days`}
-      columns={cols}
-      rows={data.workforce}
-      addLabel="Worker"
-      onSave={(rec, isNew)=> mutate('workforce', isNew ? 'insert' : 'update', rec)}
-      onDelete={(id)=> mutate('workforce', 'delete', id)}
-    />
+    <div>
+      <div className="tab-pills">
+        <button className={"tab-pill " + (subTab==='attendance'?'active':'')} onClick={()=>setSubTab('attendance')}>
+          📅 Daily Attendance & Time Tracking
+        </button>
+        <button className={"tab-pill " + (subTab==='registry'?'active':'')} onClick={()=>setSubTab('registry')}>
+          👥 Worker Registry & Certifications ({data.workforce.length})
+        </button>
+      </div>
+
+      {subTab === 'attendance' ? (
+        <div>
+          {/* Calendar & Date Navigation Bar */}
+          <div className="calendar-bar">
+            <div className="date-controls">
+              <button className="btn secondary sm" onClick={goYesterday} title="Previous Day">◀ Prev</button>
+              <button className={"btn sm " + (isToday?'':'secondary')} onClick={goToday}>Today</button>
+              <button className={"btn sm " + (isYesterday?'':'secondary')} onClick={()=>setSelectedDate(addDays(todayISO(),-1))}>Yesterday</button>
+              <button className="btn secondary sm" onClick={goTomorrow} title="Next Day">Next ▶</button>
+              <input type="date" className="cal-picker" value={selectedDate} onChange={e=>e.target.value && setSelectedDate(e.target.value)} />
+            </div>
+
+            <div style={{display:'flex', alignItems:'center', gap:10}}>
+              <div className="date-display" style={{color:'var(--amber)'}}>
+                {dateLabel} <span style={{fontSize:12.5, color:'var(--text-dim)', fontWeight:'normal'}}>({fmtDate(selectedDate)})</span>
+              </div>
+              <button className="btn sm" onClick={markAllOnSitePresent}>
+                ✓ Mark All On-Site Present (07:00 - 17:00)
+              </button>
+            </div>
+          </div>
+
+          {/* Daily Attendance Summary Cards */}
+          <div className="kpi-row" style={{marginBottom:18}}>
+            <div className="kpi-card ok" style={{padding:'12px 14px'}}>
+              <div className="kpi-label">Present</div>
+              <div className="kpi-value" style={{fontSize:22, color:'#8FCB9F'}}>{presentCount} / {onSiteCount}</div>
+              <div className="kpi-foot">On site workforce</div>
+            </div>
+            <div className="kpi-card" style={{padding:'12px 14px', borderTopColor:'var(--amber)'}}>
+              <div className="kpi-label">Late / Partial</div>
+              <div className="kpi-value" style={{fontSize:22, color:'#E8C285'}}>{lateCount}</div>
+              <div className="kpi-foot">Adjusted hours</div>
+            </div>
+            <div className="kpi-card critical" style={{padding:'12px 14px'}}>
+              <div className="kpi-label">Absent / Unlogged</div>
+              <div className="kpi-value" style={{fontSize:22, color:'#E8A38F'}}>{Math.max(0, onSiteCount - presentCount - lateCount)}</div>
+              <div className="kpi-foot">Needs attendance log</div>
+            </div>
+            <div className="kpi-card" style={{padding:'12px 14px', borderTopColor:'var(--steel)'}}>
+              <div className="kpi-label">Total Hours Logged</div>
+              <div className="kpi-value" style={{fontSize:22, color:'#9DBBE0'}}>{totalHours.toFixed(1)} hrs</div>
+              <div className="kpi-foot">Man-hours for {dateLabel.toLowerCase()}</div>
+            </div>
+          </div>
+
+          {/* Attendance Muster Table */}
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <div className="panel-title">Muster & Attendance Log — {fmtDate(selectedDate)}</div>
+                <div className="panel-sub">Select date above to inspect past or current attendance</div>
+              </div>
+            </div>
+
+            {data.workforce.length === 0 ? (
+              <div className="empty-state">No workers in registry. Add workers in the Registry tab first.</div>
+            ) : (
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Worker</th>
+                      <th>Trade / Role</th>
+                      <th>Rotation State</th>
+                      <th>Attendance Status</th>
+                      <th>Time In</th>
+                      <th>Time Out</th>
+                      <th>Hours</th>
+                      <th>Notes</th>
+                      <th>Quick Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.workforce.map(w => {
+                      const att = attendanceMap[w.id];
+                      const status = att ? att.status : (w.status === 'On Site' ? 'Unlogged' : 'Off Rotation');
+                      const timeIn = att ? att.timeIn : '—';
+                      const timeOut = att ? att.timeOut : '—';
+                      const hours = att && att.hoursWorked !== null ? `${att.hoursWorked}h` : '—';
+                      const isLogged = !!att;
+
+                      return (
+                        <tr key={w.id} className={att && att._pending ? 'row-pending' : ''}>
+                          <td>
+                            <b>{w.name}</b>
+                            {att && att._pending && <span title="Saved locally" style={{color:'var(--amber)', fontSize:10, marginLeft:6}}>●</span>}
+                          </td>
+                          <td>{w.trade}</td>
+                          <td><span className={"badge " + slug(w.status)}>{w.status}</span></td>
+                          <td>
+                            <span className={"badge " + slug(status)}>
+                              {status === 'Present' ? '✓ Present' : status === 'Late' ? '⏱ Late' : status === 'Absent' ? '✕ Absent' : status}
+                            </span>
+                          </td>
+                          <td>{timeIn !== '—' ? <span className="time-badge">{timeIn}</span> : '—'}</td>
+                          <td>{timeOut !== '—' ? <span className="time-badge">{timeOut}</span> : '—'}</td>
+                          <td className="num">{hours}</td>
+                          <td style={{color:'var(--text-dim)', fontSize:12}}>{att ? (att.notes || '—') : '—'}</td>
+                          <td>
+                            <div className="row-actions">
+                              <button className="btn secondary sm"
+                                onClick={()=>{
+                                  setEditModal({worker: w, record: att || {}});
+                                  setModalForm({
+                                    status: att ? att.status : 'Present',
+                                    timeIn: att && att.timeIn ? att.timeIn : '07:00',
+                                    timeOut: att && att.timeOut ? att.timeOut : '17:00',
+                                    notes: att ? att.notes : ''
+                                  });
+                                }}>
+                                ✎ {isLogged ? 'Edit Time' : 'Log Time'}
+                              </button>
+                              {(!att || att.status !== 'Present') && (
+                                <button className="icon-btn" title="Quick Present"
+                                  onClick={()=>handleSaveAttendance(w.id, w.name, {status:'Present', timeIn:'07:00', timeOut:'17:00'})}>
+                                  ✓
+                                </button>
+                              )}
+                              {(!att || att.status !== 'Absent') && (
+                                <button className="icon-btn" title="Quick Absent" style={{color:'var(--rust)'}}
+                                  onClick={()=>handleSaveAttendance(w.id, w.name, {status:'Absent', timeIn:null, timeOut:null, hoursWorked:0})}>
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Registry View */
+        <DataTable
+          title="Workforce & Certification Registry (2-on/2-off)"
+          sub={`${onSiteCount} on site now · certs auto-flag if expiring within ${data.settings.certAlertDays||30} days`}
+          columns={registryCols}
+          rows={data.workforce}
+          addLabel="Worker"
+          onSave={(rec, isNew)=> mutate('workforce', isNew ? 'insert' : 'update', rec)}
+          onDelete={(id)=> mutate('workforce', 'delete', id)}
+        />
+      )}
+
+      {/* Edit Attendance Modal */}
+      {editModal !== null && (
+        <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) setEditModal(null); }}>
+          <div className="modal">
+            <div className="modal-title">
+              Log Attendance — {editModal.worker.name}
+              <div style={{fontSize:12, color:'var(--amber)', marginTop:4, fontFamily:'Inter', fontWeight:'normal'}}>
+                Date: {fmtDate(selectedDate)} ({dateLabel})
+              </div>
+            </div>
+            <form onSubmit={(e)=>{
+              e.preventDefault();
+              handleSaveAttendance(editModal.worker.id, editModal.worker.name, modalForm);
+              setEditModal(null);
+            }}>
+              <div className="field">
+                <label>Attendance Status</label>
+                <select value={modalForm.status} onChange={e=>setModalForm({...modalForm, status:e.target.value})} required>
+                  <option value="Present">Present (Full Day)</option>
+                  <option value="Late">Late / Half Day</option>
+                  <option value="Absent">Absent</option>
+                  <option value="Off Rotation">Off Rotation / Rest Day</option>
+                </select>
+              </div>
+
+              {modalForm.status !== 'Absent' && modalForm.status !== 'Off Rotation' && (
+                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+                  <div className="field">
+                    <label>Time In</label>
+                    <input type="time" value={modalForm.timeIn} onChange={e=>setModalForm({...modalForm, timeIn:e.target.value})} required />
+                  </div>
+                  <div className="field">
+                    <label>Time Out</label>
+                    <input type="time" value={modalForm.timeOut} onChange={e=>setModalForm({...modalForm, timeOut:e.target.value})} required />
+                  </div>
+                </div>
+              )}
+
+              {modalForm.status !== 'Absent' && modalForm.status !== 'Off Rotation' && modalForm.timeIn && modalForm.timeOut && (
+                <div style={{fontSize:12, color:'var(--text-dim)', marginBottom:12, fontFamily:'JetBrains Mono'}}>
+                  ⏱ Calculated Shift Duration: <b>{calcHours(modalForm.timeIn, modalForm.timeOut)} hours</b>
+                </div>
+              )}
+
+              <div className="field">
+                <label>Notes / Work Area</label>
+                <input type="text" placeholder="e.g. Crusher foundation formwork, Night shift overtime"
+                  value={modalForm.notes || ''} onChange={e=>setModalForm({...modalForm, notes:e.target.value})} />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn secondary" onClick={()=>setEditModal(null)}>Cancel</button>
+                <button type="submit" className="btn">Save Attendance</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1349,7 +1678,7 @@ function App(){
     dashboard:['Executive Dashboard','Cross-module status, generated on each sync'],
     procurement:['Procurement & Long-Lead-Time Materials','Lead-time-driven ordering and supplier tiering'],
     transport:['Transportation & Logistics Cost Control','Multi-modal tracking, landed cost, fuel sub-ledger'],
-    workforce:['Workforce Management','2-on/2-off rotation, certifications, manning'],
+    workforce:['Workforce & Daily Attendance Tracking','2-on/2-off rotation, muster logs, time-in & time-out'],
     costschedule:['Cost & Schedule Integration','Committed / in-transit / installed cost states'],
     earlywarning:['Early Warning / Risk Alerts','Rule-based automated flags, ranked by severity'],
     field:['Field Reporting','Offline-first daily entry, prioritized sync'],
