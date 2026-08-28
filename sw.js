@@ -10,14 +10,23 @@
 //    The app's own JS layer (local cache + offline mutation queue) handles
 //    those — this service worker only concerns itself with the app's code,
 //    not its data.
-const SHELL_CACHE = 'site-pmis-shell-v3';
-const RUNTIME_CACHE = 'site-pmis-runtime-v3';
+const SHELL_CACHE = 'site-pmis-shell-v4';
+const RUNTIME_CACHE = 'site-pmis-runtime-v4';
 const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const CDN_HOSTS = ['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_FILES)).catch(()=>{})
+    caches.open(SHELL_CACHE).then(async (cache) => {
+      // Cache files individually with fallback to avoid single missing icon from failing install
+      for (const file of SHELL_FILES) {
+        try {
+          await cache.add(file);
+        } catch (e) {
+          console.warn('SW shell item not found during install:', file);
+        }
+      }
+    })
   );
   self.skipWaiting();
 });
@@ -25,7 +34,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== SHELL_CACHE && k !== RUNTIME_CACHE).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((k) => k !== SHELL_CACHE && k !== RUNTIME_CACHE)
+          .map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
@@ -37,9 +50,19 @@ self.addEventListener('fetch', (event) => {
   // Never touch Supabase requests — always live, never cached here.
   if(url.hostname.endsWith('.supabase.co')) return;
 
-  const isShellFile = SHELL_FILES.some((f) => event.request.url.endsWith(f.replace('./', '')));
+  // Accurately check shell files
+  const isShellFile = SHELL_FILES.some((f) => {
+    const clean = f.replace(/^\.\//, '');
+    if (!clean) {
+      return url.pathname === '/' || url.pathname.endsWith('/index.html');
+    }
+    return url.pathname.endsWith(clean);
+  });
+
   if(isShellFile){
-    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached || fetch(event.request))
+    );
     return;
   }
 
