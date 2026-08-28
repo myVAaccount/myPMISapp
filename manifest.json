@@ -1,19 +1,14 @@
--- Run this AFTER the original pmis_schema.sql, and AFTER creating the
--- storage bucket in the dashboard (see instructions below).
-
--- 1. Add a column to hold uploaded photo URLs for field reports
-alter table field_reports add column if not exists photo_urls jsonb default '[]'::jsonb;
-
--- 2. Before running the policies below, create the storage bucket:
---    Dashboard > Storage > New bucket
---    Name: field-photos
---    Public bucket: ON  (so uploaded photos are directly viewable via URL)
---    Then come back and run the two policies below.
-
-create policy "prototype - public read field photos"
-on storage.objects for select
-using (bucket_id = 'field-photos');
-
-create policy "prototype - public upload field photos"
-on storage.objects for insert
-with check (bucket_id = 'field-photos');
+{
+  "name": "Site PMIS — Remote Mining Facility",
+  "short_name": "Site PMIS",
+  "description": "Offline-first project management for a remote mining processing facility",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#17140F",
+  "theme_color": "#17140F",
+  "orientation": "any",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
