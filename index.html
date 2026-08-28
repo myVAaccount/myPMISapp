@@ -117,7 +117,9 @@
   .panel-title{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:0.3px;}
   .panel-sub{font-size:12px;color:var(--text-dim);}
 
-  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .grid-3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;}
+  @media(max-width:1100px){.grid-3{grid-template-columns:1fr;}}
   @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
 
   .btn{
@@ -202,7 +204,7 @@
   .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
   .settings-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
   .settings-row .field{margin-bottom:0;min-width:160px;}
-  .chart-wrap{position:relative;height:230px;}
+  .chart-wrap{position:relative;height:240px;}
   .toast{
     position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--amber);
     color:var(--text);padding:10px 16px;border-radius:7px;font-size:13px;z-index:60;
@@ -242,7 +244,7 @@
     .content{ padding:14px; }
     .kpi-row{ grid-template-columns:1fr 1fr; gap:10px; }
     .kpi-value{ font-size:21px; }
-    .grid-2{ grid-template-columns:1fr; }
+    .grid-2,.grid-3{ grid-template-columns:1fr; }
     .panel{ padding:14px 14px; }
     .modal{ max-width:100%; width:100%; height:100%; max-height:100%; border-radius:0; }
     .pulse-strip{ flex-wrap:wrap; gap:8px; width:100%; }
@@ -355,7 +357,6 @@ const writeCache = (d) => { try{ localStorage.setItem(CACHE_KEY, JSON.stringify(
 const readQueueStorage = () => { try{ const raw = localStorage.getItem(QUEUE_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } };
 const writeQueueStorage = (q) => { try{ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }catch(e){} };
 
-// Only field currently referencing another table's row: activities.linkedShipmentId -> shipments.id
 const remapForeignKeys = (stateKey, payload, idMap) => {
   if(stateKey === 'activities' && payload.linkedShipmentId && idMap[payload.linkedShipmentId]){
     return {...payload, linkedShipmentId: idMap[payload.linkedShipmentId]};
@@ -442,8 +443,6 @@ function useStore(){
     return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
   },[]);
 
-  // mutate('materials','insert'|'update'|'delete', payload) — always applies optimistically & locally first,
-  // then tries the network; anything that fails or is offline gets queued and retried on reconnect.
   const mutate = async (stateKey, action, payload) => {
     setSaving(true);
     const isTemp = (id) => typeof id === 'string' && id.startsWith('local-');
@@ -503,9 +502,9 @@ function useStore(){
 
 /* ---------- generic CRUD table ---------- */
 function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, renderExtra}){
-  const [modalRow, setModalRow] = useState(null); // null = closed, {} = new, {...} = edit
+  const [modalRow, setModalRow] = useState(null);
   const [form, setForm] = useState({});
-  const [pendingFiles, setPendingFiles] = useState({}); // {colKey: FileList}
+  const [pendingFiles, setPendingFiles] = useState({});
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
@@ -695,9 +694,6 @@ function computeAlerts(data){
   data.materials.forEach(m => {
     if(m.status !== 'Installed'){
       const mustOrderBy = addDays(m.needBy, -(Number(m.supplierLeadDays||0)+Number(m.transportLeadDays||0)+Number(m.bufferDays||0)));
-      if(mustOrderBy < today && m.status === 'Ordered'){
-        // already ordered, fine — only flag if not yet ordered stage is missing; skip to avoid false positives
-      }
       if(mustOrderBy < today && !['Ordered','Regional Hub','Provincial Port','Site Laydown','Installed'].includes(m.status)){
         alerts.push({
           severity:'critical',
@@ -758,12 +754,14 @@ function computeAlerts(data){
   return alerts;
 }
 
-/* ---------- dashboard ---------- */
+/* ---------- dashboard with Spend Budget Pie Chart ---------- */
 function Dashboard({data, alerts, onNavigate}){
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  const pieRef = useRef(null);
-  const pieInstance = useRef(null);
+  const spendPieRef = useRef(null);
+  const spendPieInstance = useRef(null);
+  const materialPieRef = useRef(null);
+  const materialPieInstance = useRef(null);
 
   const critical = alerts.filter(a=>a.severity==='critical').length;
   const warning = alerts.filter(a=>a.severity==='warning').length;
@@ -773,6 +771,7 @@ function Dashboard({data, alerts, onNavigate}){
   const onSiteWorkers = data.workforce.filter(w=>w.status==='On Site').length;
   const activeShipments = data.shipments.filter(s=>s.legStatus!=='Delivered').length;
 
+  // 1. Stacked Bar Chart (Committed / In-Transit / Installed)
   useEffect(()=>{
     if(!chartRef.current) return;
     if(chartInstance.current) chartInstance.current.destroy();
@@ -800,14 +799,101 @@ function Dashboard({data, alerts, onNavigate}){
     return ()=>{ if(chartInstance.current) chartInstance.current.destroy(); };
   },[data.activities]);
 
+  // 2. Spend Budget Pie / Donut Chart with Hover Spend Name & Breakdown
   useEffect(()=>{
-    if(!pieRef.current) return;
-    if(pieInstance.current) pieInstance.current.destroy();
+    if(!spendPieRef.current) return;
+    if(spendPieInstance.current) spendPieInstance.current.destroy();
+
+    const spendData = data.activities.map(a => {
+      const spent = Number(a.committed || 0) + Number(a.inTransit || 0) + Number(a.installed || 0);
+      return {
+        name: a.name || 'Unnamed Spend',
+        costCode: a.costCode || '',
+        budget: Number(a.budget || 0),
+        spent: spent
+      };
+    }).filter(item => item.spent > 0 || item.budget > 0);
+
+    const labels = spendData.length ? spendData.map(d => d.name) : ['No Spend Logged'];
+    const values = spendData.length ? spendData.map(d => d.spent || 0) : [1];
+    const palette = [
+      '#E8871E', '#5C8AA6', '#7A9070', '#C4432B', '#D97736',
+      '#8B6F96', '#4E9F94', '#C99E38', '#A25946', '#6C8EBF'
+    ];
+
+    spendPieInstance.current = new Chart(spendPieRef.current, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: palette.slice(0, Math.max(labels.length, 1)),
+          borderColor: '#221D17',
+          borderWidth: 2,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: () => onNavigate('costschedule'),
+        onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#A99A85',
+              font: { size: 10, family: 'Inter' },
+              boxWidth: 10,
+              padding: 8
+            }
+          },
+          tooltip: {
+            backgroundColor: '#2B241C',
+            titleColor: '#F3ECDF',
+            titleFont: { size: 12, family: 'Oswald', weight: 'bold' },
+            bodyColor: '#F3ECDF',
+            bodyFont: { size: 11, family: 'JetBrains Mono' },
+            borderColor: '#E8871E',
+            borderWidth: 1,
+            padding: 10,
+            displayColors: true,
+            callbacks: {
+              title: function(context) {
+                const idx = context[0].dataIndex;
+                const item = spendData[idx];
+                return item ? `${item.name} (${item.costCode || 'N/A'})` : 'Spend Item';
+              },
+              label: function(context) {
+                const idx = context.dataIndex;
+                const item = spendData[idx];
+                if(!item) return '₱0';
+                const totalAll = spendData.reduce((acc, curr) => acc + curr.spent, 0);
+                const pctOfSpend = totalAll > 0 ? ((item.spent / totalAll) * 100).toFixed(1) : '0.0';
+                const budgetUsage = item.budget > 0 ? ((item.spent / item.budget) * 100).toFixed(1) : '—';
+                return [
+                  ` Spent: ${fmtMoney(item.spent)} (${pctOfSpend}% of total spend)`,
+                  ` Budget: ${fmtMoney(item.budget)} (${budgetUsage}% utilized)`
+                ];
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return ()=>{ if(spendPieInstance.current) spendPieInstance.current.destroy(); };
+  }, [data.activities]);
+
+  // 3. Material Staging Status Doughnut Chart
+  useEffect(()=>{
+    if(!materialPieRef.current) return;
+    if(materialPieInstance.current) materialPieInstance.current.destroy();
     const statuses = ['Ordered','Regional Hub','Provincial Port','Site Laydown','Installed'];
     const counts = statuses.map(st => data.materials.filter(m=>m.status===st).length);
-    pieInstance.current = new Chart(pieRef.current, {
+    materialPieInstance.current = new Chart(materialPieRef.current, {
       type:'doughnut',
-      data:{ labels: statuses, datasets:[{data:counts, backgroundColor:['#5C8AA6','#E8871E','#E8871E','#7A9070','#8FCB9F']}] },
+      data:{ labels: statuses, datasets:[{data:counts, backgroundColor:['#5C8AA6','#E8871E','#D97736','#7A9070','#8FCB9F']}] },
       options:{
         responsive:true, maintainAspectRatio:false,
         onClick:()=>onNavigate('procurement'),
@@ -815,7 +901,7 @@ function Dashboard({data, alerts, onNavigate}){
         plugins:{legend:{position:'bottom', labels:{color:'#A99A85', font:{size:10}, boxWidth:10}}}
       }
     });
-    return ()=>{ if(pieInstance.current) pieInstance.current.destroy(); };
+    return ()=>{ if(materialPieInstance.current) materialPieInstance.current.destroy(); };
   },[data.materials]);
 
   return (
@@ -843,24 +929,35 @@ function Dashboard({data, alerts, onNavigate}){
         </div>
       </div>
 
-      <div className="grid-2">
-        <div className="panel">
+      <div className="grid-3" style={{marginBottom: 20}}>
+        <div className="panel" style={{marginBottom:0}}>
           <div className="panel-head">
             <div>
-              <div className="panel-title">Cost & Schedule — Committed / In-Transit / Installed</div>
-              <div className="panel-sub">By activity cost code</div>
+              <div className="panel-title">Cost & Schedule Breakdown</div>
+              <div className="panel-sub">Committed / In-Transit / Installed by Cost Code</div>
             </div>
           </div>
           <div className="chart-wrap"><canvas ref={chartRef}></canvas></div>
         </div>
-        <div className="panel">
+
+        <div className="panel" style={{marginBottom:0}}>
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">Spend Budget Distribution</div>
+              <div className="panel-sub">Hover to inspect spend name & budget allocation</div>
+            </div>
+          </div>
+          <div className="chart-wrap"><canvas ref={spendPieRef}></canvas></div>
+        </div>
+
+        <div className="panel" style={{marginBottom:0}}>
           <div className="panel-head">
             <div>
               <div className="panel-title">Material Staging Status</div>
               <div className="panel-sub">Hub → Port → Laydown → Installed</div>
             </div>
           </div>
-          <div className="chart-wrap"><canvas ref={pieRef}></canvas></div>
+          <div className="chart-wrap"><canvas ref={materialPieRef}></canvas></div>
         </div>
       </div>
 
@@ -1077,7 +1174,6 @@ function CostSchedule({data, mutate}){
       }},
   ];
 
-  // linkedShipmentId select needs id values, but human-readable labels
   const shipmentLabels = {};
   data.shipments.forEach(s => { shipmentLabels[s.id] = s.materialName || s.route || 'Shipment'; });
   const colsWithProperSelect = cols.map(c => c.key==='linkedShipmentId' ? {
