@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Site PMIS — Remote Mining Facility</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -11,6 +11,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- Android & PWA settings -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17140F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Site PMIS">
+
+<!-- iOS Safari PWA support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Site PMIS">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+
 <style>
   :root{
     --bg:#17140F;
@@ -29,7 +44,7 @@
     --body:'Inter', sans-serif;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-tap-highlight-color:transparent;}
   #root{min-height:100vh;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -73,7 +88,7 @@
   }
   .topbar-title{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:0.3px;}
   .topbar-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
-  .pulse-strip{display:flex;align-items:center;gap:14px;}
+  .pulse-strip{display:flex;align-items:center;gap:12px;}
   .pulse-chip{
     display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;
     font-family:var(--mono);font-size:12px;border:1px solid var(--border);background:var(--surface2);
@@ -86,11 +101,6 @@
   .pulse-dot.ok{background:var(--olive);}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(196,67,43,.6);}70%{box-shadow:0 0 0 7px rgba(196,67,43,0);}100%{box-shadow:0 0 0 0 rgba(196,67,43,0);}}
   .sync-chip{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-dim);font-family:var(--mono);}
-  .sync-btn{
-    background:var(--surface2);border:1px solid var(--border);color:var(--text);
-    padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--body);
-  }
-  .sync-btn:hover{border-color:var(--amber);}
 
   .content{padding:24px 26px;flex:1;overflow-x:hidden;}
 
@@ -169,7 +179,6 @@
   .badge.local{background:#2A2A2A;color:#B0A995;}
   .badge.synced{background:#233A2C;color:#8FCB9F;}
   
-  /* Attendance Badges */
   .badge.present{background:#233A2C;color:#8FCB9F;border:1px solid rgba(143,203,159,0.3);}
   .badge.late{background:#3A2E1C;color:#E8C285;border:1px solid rgba(232,194,133,0.3);}
   .badge.absent{background:#3A1F1A;color:#E8A38F;border:1px solid rgba(232,163,143,0.3);}
@@ -191,7 +200,7 @@
   .empty-state{padding:26px;text-align:center;color:var(--text-dim);font-size:13px;}
 
   .modal-overlay{
-    position:fixed;inset:0;background:rgba(10,8,5,0.7);display:flex;align-items:center;
+    position:fixed;inset:0;background:rgba(10,8,5,0.75);backdrop-filter:blur(4px);display:flex;align-items:center;
     justify-content:center;z-index:50;padding:20px;
   }
   .modal{
@@ -212,16 +221,26 @@
   .settings-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
   .settings-row .field{margin-bottom:0;min-width:160px;}
   .chart-wrap{position:relative;height:240px;}
-  .toast{
-    position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--amber);
-    color:var(--text);padding:10px 16px;border-radius:7px;font-size:13px;z-index:60;
-  }
+
+  /* Install Button & Install Guide Styles */
   .install-btn{
-    background:var(--surface2);border:1px solid var(--amber-dim);color:var(--amber);
-    padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--body);
-    display:flex;align-items:center;gap:6px;font-weight:600;
+    background:var(--surface2);border:1px solid var(--amber);color:var(--amber);
+    padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--body);
+    display:inline-flex;align-items:center;gap:6px;font-weight:600;transition:all .15s;
   }
-  .install-btn:hover{border-color:var(--amber);}
+  .install-btn:hover{background:var(--amber);color:#1A1305;}
+
+  .install-step-card{
+    background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;
+  }
+  .install-step-num{
+    background:var(--amber);color:#1A1305;font-weight:bold;font-size:12px;
+    width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;margin-top:2px;font-family:var(--mono);
+  }
+  .install-step-text{font-size:13px;line-height:1.4;color:var(--text);}
+  .install-step-sub{font-size:11.5px;color:var(--text-dim);margin-top:2px;}
 
   /* Calendar & Attendance Sub-Navigation Styles */
   .tab-pills{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:12px;}
@@ -245,10 +264,6 @@
     padding:6px 10px;border-radius:6px;font-size:12.5px;font-family:var(--mono);cursor:pointer;
   }
   .time-badge{font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg);padding:3px 7px;border-radius:4px;border:1px solid var(--border);}
-  .time-input-inline{
-    background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 6px;
-    border-radius:4px;font-size:12px;font-family:var(--mono);width:100px;
-  }
 
   /* ---------- mobile ---------- */
   @media (max-width: 780px){
@@ -285,12 +300,6 @@
     .calendar-bar{ flex-direction:column; align-items:flex-start; }
   }
 </style>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#17140F">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Site PMIS">
 </head>
 <body>
 <div id="root"></div>
@@ -466,7 +475,6 @@ function useStore(){
         }
       }catch(e){
         const msg = (e && e.message) || '';
-        // If it's a schema / table-not-found error, don't keep retrying forever in blocking queue
         if(/relation.*does not exist|column.*does not exist|42P01|PGRST/i.test(msg)){
           console.warn(`[Auto-Sync] Skipped remote push for ${item.stateKey}:`, msg);
         } else {
@@ -478,7 +486,6 @@ function useStore(){
     persistQueue();
     syncingRef.current = false; setSyncing(false);
     
-    // Auto clear pending status locally
     setData(prev => {
       if(!prev) return prev;
       const next = {...prev};
@@ -505,7 +512,6 @@ function useStore(){
     window.addEventListener('offline', goOffline);
     window.addEventListener('focus', onFocus);
 
-    // Automatic background heartbeat sync every 6 seconds
     const interval = setInterval(() => {
       if(navigator.onLine && queueRef.current.length > 0 && !syncingRef.current) {
         flushQueue();
@@ -1672,14 +1678,28 @@ function App(){
   const [tab, setTab] = useState('dashboard');
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(()=>{
-    const onBeforeInstall = (e) => { e.preventDefault(); setInstallPrompt(e); };
-    const onInstalled = () => { setInstalled(true); setInstallPrompt(null); };
+    const isApple = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+    setIsIOS(isApple);
+
+    const onBeforeInstall = (e) => { 
+      e.preventDefault(); 
+      setInstallPrompt(e); 
+    };
+    const onInstalled = () => { 
+      setInstalled(true); 
+      setInstallPrompt(null);
+      setShowInstallModal(false);
+    };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     window.addEventListener('appinstalled', onInstalled);
+
     if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) setInstalled(true);
+    if(window.navigator.standalone === true) setInstalled(true);
+
     if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
@@ -1690,10 +1710,14 @@ function App(){
   const handleInstallClick = async () => {
     if(installPrompt){
       installPrompt.prompt();
-      await installPrompt.userChoice;
+      const { outcome } = await installPrompt.userChoice;
+      if(outcome === 'accepted'){
+        setInstalled(true);
+      }
       setInstallPrompt(null);
-    } else if(isIOS){
-      alert('On iPhone/iPad: tap the Share icon, then "Add to Home Screen".');
+    } else {
+      // If iOS or browser without direct prompt API, show tailored step-by-step modal
+      setShowInstallModal(true);
     }
   };
 
@@ -1746,7 +1770,14 @@ function App(){
             </div>
           ))}
         </div>
-        <div className="sidebar-foot">Offline-first · auto-syncs when connected</div>
+        <div className="sidebar-foot">
+          {!installed && (
+            <button className="install-btn" style={{width:'100%', justifyContent:'center', marginBottom:8}} onClick={handleInstallClick}>
+              ⬇ Install Mobile App
+            </button>
+          )}
+          <div>Offline-first · auto-syncs when connected</div>
+        </div>
       </div>
 
       <div className="main">
@@ -1764,8 +1795,10 @@ function App(){
             <div className="sync-chip">
               {saving ? 'saving…' : syncing ? 'syncing…' : !online ? 'offline — saved locally' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'synced')}
             </div>
-            {!installed && (installPrompt || isIOS) && (
-              <button className="install-btn" onClick={handleInstallClick}>⬇ Install App</button>
+            {!installed && (
+              <button className="install-btn" onClick={handleInstallClick}>
+                📲 {isIOS ? 'Install on iPhone' : 'Install App'}
+              </button>
             )}
           </div>
         </div>
@@ -1779,6 +1812,77 @@ function App(){
           {tab==='field' && <FieldReporting data={data} mutate={mutate} />}
         </div>
       </div>
+
+      {/* PWA Mobile Installation Guide Modal (for iPhone, iPad, Android) */}
+      {showInstallModal && (
+        <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) setShowInstallModal(false); }}>
+          <div className="modal" style={{maxWidth:420}}>
+            <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:16}}>
+              <img src="icon-192.png" alt="Site PMIS" style={{width:42, height:42, borderRadius:8, border:'1px solid var(--border)'}} />
+              <div>
+                <div style={{fontFamily:'Oswald', fontSize:18, fontWeight:700}}>Install Site PMIS App</div>
+                <div style={{fontSize:12, color:'var(--text-dim)'}}>Full offline access & Home Screen launcher</div>
+              </div>
+            </div>
+
+            {isIOS ? (
+              <div>
+                <div style={{fontSize:13, color:'var(--amber)', marginBottom:12, fontWeight:600}}>
+                  📱 iPhone / iPad Installation Steps:
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">1</div>
+                  <div className="install-step-text">
+                    Tap the <b>Share button</b> (square icon with an arrow pointing up <span style={{fontSize:15}}>⎋</span>) at the bottom of Safari.
+                  </div>
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">2</div>
+                  <div className="install-step-text">
+                    Scroll down the share options and tap <b>"Add to Home Screen"</b> <span style={{color:'var(--amber)'}}>➕</span>.
+                  </div>
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">3</div>
+                  <div className="install-step-text">
+                    Tap <b>"Add"</b> in the top right corner. The app will appear on your Home Screen!
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontSize:13, color:'var(--amber)', marginBottom:12, fontWeight:600}}>
+                  🤖 Android Installation Steps:
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">1</div>
+                  <div className="install-step-text">
+                    Tap the <b>three dots menu (⋮)</b> in the top right corner of Chrome.
+                  </div>
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">2</div>
+                  <div className="install-step-text">
+                    Select <b>"Install app"</b> or <b>"Add to Home screen"</b>.
+                  </div>
+                </div>
+                <div className="install-step-card">
+                  <div className="install-step-num">3</div>
+                  <div className="install-step-text">
+                    Tap <b>"Install"</b> to confirm. The app will launch in standalone full-screen mode!
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="modal-actions" style={{marginTop:16}}>
+              <button className="btn" style={{width:'100%', justifyContent:'center'}} onClick={()=>setShowInstallModal(false)}>
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
