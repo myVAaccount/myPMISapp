@@ -10,8 +10,8 @@
 //    The app's own JS layer (local cache + offline mutation queue) handles
 //    those — this service worker only concerns itself with the app's code,
 //    not its data.
-const SHELL_CACHE = 'site-pmis-shell-v4';
-const RUNTIME_CACHE = 'site-pmis-runtime-v4';
+const SHELL_CACHE = 'site-pmis-shell-v5';
+const RUNTIME_CACHE = 'site-pmis-runtime-v5';
 const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const CDN_HOSTS = ['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
