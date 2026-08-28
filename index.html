@@ -282,7 +282,7 @@ const TABLE_MAPS = {
   fuel: {table:'fuel_log', fields:{date:'date', type:'type', liters:'liters', cost:'cost', notes:'notes'}},
   workforce: {table:'workforce', fields:{name:'name', trade:'trade', rotationIn:'rotation_in', rotationOut:'rotation_out', certName:'cert_name', certExpiry:'cert_expiry', status:'status'}},
   activities: {table:'activities', fields:{name:'name', costCode:'cost_code', budget:'budget', committed:'committed', inTransit:'in_transit', installed:'installed', linkedShipmentId:'linked_shipment_id'}},
-  fieldReports: {table:'field_reports', fields:{date:'date', type:'type', description:'description', photoCount:'photo_count', photoUrls:'photo_urls', syncStatus:'sync_status'}},
+  fieldReports: {table:'field_reports', fields:{date:'date', type:'type', description:'description', photoCount:'photo_count', photoUrls:'photo_urls'}},
 };
 
 const toSnakeRow = (stateKey, obj) => {
@@ -323,7 +323,12 @@ async function sbUploadPhoto(file){
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
   const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName}`;
   const {error} = await supabaseClient.storage.from('field-photos').upload(path, file, {cacheControl:'3600', upsert:false});
-  if(error) throw error;
+  if(error){
+    if(/not.?found/i.test(error.message || '')){
+      throw new Error('Storage bucket "field-photos" doesn\'t exist yet in your Supabase project. Create it in Storage > New bucket (name it exactly "field-photos", toggle Public ON), then try again.');
+    }
+    throw error;
+  }
   const {data} = supabaseClient.storage.from('field-photos').getPublicUrl(path);
   return data.publicUrl;
 }
@@ -1114,14 +1119,13 @@ function FieldReporting({data, mutate}){
           </div>
         );
       }},
-    {key:'syncStatus', label:'Sync', field:{type:'select', options:['Local Only','Synced'], required:true}, render:r=><span className={"badge "+slug(r.syncStatus)}>{r.syncStatus}</span>},
   ];
-  const localOnly = data.fieldReports.filter(f=>f.syncStatus==='Local Only').length;
+  const localOnly = data.fieldReports.filter(f=>f._pending).length;
 
   return (
     <DataTable
       title="Field Reports — Offline Data Entry"
-      sub={`${localOnly} entries queued locally, not yet synced. Safety/incident reports sync first when a connectivity window opens.`}
+      sub={`${localOnly} entries saved on this device, not yet synced. They'll sync automatically once you're back online — look for the amber dot.`}
       columns={cols}
       rows={data.fieldReports}
       addLabel="Field Report"
