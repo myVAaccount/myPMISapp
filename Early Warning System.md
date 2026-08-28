@@ -1,212 +1,195 @@
-# Site PMIS — Early Warning System & Trigger Conditions Guide
-
-This comprehensive guide details the automated early warning rule engine (`computeAlerts()`). It explains **every data field involved**, the **exact mathematical formulas**, the **specific conditions and timing when warnings occur**, their **severity tiers**, **cascading impacts**, and **recommended operational actions**.
-
----
-
-## 🧭 Executive Summary Matrix
-
-| Alert Rule | Primary Module | Severity | Trigger Condition / Formula | Key Fields Involved | Cascade Impact |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Delayed Shipment** | Transportation | ⛔ **Critical** | `today > expectedDate + checkpointGraceDays` (and status $\neq$ Delivered) | `expectedDate`, `legStatus`, `checkpointGraceDays`, `linkedShipmentId` | Delays linked schedule construction activities (`activities`). |
-| **2. Weather Disruption** | Transportation | ⛔ **Critical** / ⚠ **Warning** | `weatherFlag == 'Delayed'` (Critical) or `weatherFlag == 'Watch'` (Warning) | `weatherFlag`, `route`, `mode`, `materialName` | Strands marine cargo; delays worker crew change rotations. |
-| **3. Must-Order-By Expiry** | Procurement | ⛔ **Critical** | `today > needBy - (supplierLead + transportLead + buffer)` (and status is Unordered) | `needBy`, `supplierLeadDays`, `transportLeadDays`, `bufferDays`, `status` | Causes construction laydown stockouts and project idle time. |
-| **4. Expiring Certification** | Workforce | ⛔ **Critical** / ⚠ **Warning** | Days to `certExpiry` $\le 7\text{d}$ (Critical) or $8\text{–}30\text{d}$ (Warning) | `certExpiry`, `certName`, `trade`, `certAlertDays`, `rotationOut` | Worker legally disqualified from operating machinery. |
-| **5. Low Fuel Stock** | Fuel / Transport | ⛔ **Critical** / ⚠ **Warning** | Fuel Runway $\le 3\text{d}$ (Critical) or $4\text{–}7\text{d}$ (Warning) | `fuelStockLiters`, `liters` (Consumption), `fuelAlertDays` | Site diesel generators and heavy haul fleet idle. |
-| **6. Budget Overrun** | Cost & Schedule | ⚠ **Warning** | `committed + inTransit + installed > budget` | `budget`, `committed`, `inTransit`, `installed`, `costCode` | Negative cost variance; depletes project contingency fund. |
+# Site PMIS — Early Warning & Risk System Guide
+*A plain-English operational guide for Project Managers, Site Engineers, and Field Supervisors.*
 
 ---
 
-## 🔍 Detailed Field-by-Field Breakdown & Alert Rules
+## 🧭 Quick Summary of the 6 Early Warning Rules
+
+| Warning Name | Module in App | Severity Level | When Does It Trigger? | Impact on the Project |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Delayed Shipment** | 🚚 Transport & Cost | ⛔ **Critical** | When cargo has not arrived after its **Expected Date** plus the **Grace Period (2 days)**. | Construction work depending on these materials is delayed. |
+| **2. Route Weather Alert** | 🚚 Transport & Cost | ⛔ **Critical** / ⚠ **Warning** | When a travel corridor has a **Delayed** (typhoon/port closure) or **Watch** (gale/rough seas) flag. | Boats and trucks are stranded; incoming/outgoing worker rotations are disrupted. |
+| **3. Must-Order-By Passed** | 📦 Procurement | ⛔ **Critical** | When today's date is past the calculated **Must-Order-By Date** and the material has not been ordered yet. | Materials will arrive late, leading to site work stoppage. |
+| **4. Expiring Certification** | 👥 Workforce | ⛔ **Critical** / ⚠ **Warning** | When a worker's safety or equipment license is expiring within **30 days** (Warning) or **7 days** (Critical). | Worker is legally disqualified from operating machinery or entering high-risk areas. |
+| **5. Low Fuel Stock** | ⛽ Transport & Cost | ⛔ **Critical** / ⚠ **Warning** | When remaining diesel in the site tanks is down to **7 days** (Warning) or **3 days** (Critical). | Site diesel generators and heavy equipment will run out of power. |
+| **6. Budget Cost Overrun** | 💰 Cost & Schedule | ⚠ **Warning** | When total money spent (**Committed + In Transit + Installed**) is higher than the approved **Budget**. | The activity is losing money and cutting into project contingency reserves. |
 
 ---
 
-### 1. Delayed Shipment Behind Checkpoint
-
-#### 📋 Fields Involved:
-* **`shipments.expected_date` (`expectedDate`)**: The target arrival date (ISO format: `YYYY-MM-DD`) committed by the freight forwarder or logistics carrier for the current leg.
-* **`shipments.leg_status` (`legStatus`)**: Current milestone stage (`Not Started`, `In Transit`, `At Checkpoint`, `Delivered`).
-* **`shipments.material_name` (`materialName`)**: Cargo item description (e.g., *Cone Crusher Liners*, *Grinding Media*).
-* **`shipments.route` (`route`)**: Logistics corridor path (e.g., *Manila Port → Surigao Hub → Site Laydown*).
-* **`settings.checkpoint_grace_days` (`checkpointGraceDays`)**: Number of permitted buffer days before a delay triggers an official warning (default: `2 days`).
-* **`activities.linked_shipment_id` (`linkedShipmentId`)**: Foreign key connecting this shipment to dependent construction activities in the Cost & Schedule module.
-
-#### ⏱️ When and Why It Occurs:
-The alert triggers when a shipment has **not arrived** (`legStatus !== 'Delivered'`) and the current calendar date exceeds the expected arrival date by more than the allowed grace days.
-
-$$\text{Days Overdue} = (\text{Current Date} - \text{expectedDate}) - \text{checkpointGraceDays}$$
-$$\text{Trigger Condition: } \text{Days Overdue} > 0$$
-
-* *Example*: A shipment with `expectedDate = 2026-08-20` and `checkpointGraceDays = 2` will trigger a **Critical Alert** starting on **`2026-08-23`** if its status is still `In Transit` or `At Checkpoint`.
-
-#### 🔴 Severity:
-* ⛔ **Critical**: Directly impacts critical-path installation work.
-
-#### 🌊 Cascading Impact:
-The system cross-references `activities.linked_shipment_id` and explicitly lists all downstream activities (e.g., *Primary Crusher Erection*, *Conveyor 02 Mechanical*) that cannot proceed without this cargo.
-
-#### 🛠️ SOP / Corrective Action:
-1. Contact freight forwarder for vessel GPS tracking and port congestion status.
-2. In the **Cost & Schedule** module, reschedule dependent activity start dates to prevent idle labor penalties.
+## 🔍 Detailed Explanations of Each Rule & App Fields
 
 ---
 
-### 2. Maritime & Corridor Weather Disruption
+### Rule 1: Delayed Shipment Behind Checkpoint
 
-#### 📋 Fields Involved:
-* **`shipments.weather_flag` (`weatherFlag`)**: Coastal and maritime bulletin classification (`None`, `Watch`, `Delayed`).
-* **`shipments.route` (`route`)**: Geographic transit corridor (e.g., *Surigao Strait Marine Corridor*).
-* **`shipments.mode` (`mode`)**: Transit mode (`Truck`, `Barge/Boat`, `Final-Mile`).
-* **`shipments.material_name` (`materialName`)**: Name of cargo currently at sea or on transit roads.
+#### 📱 Fields in the App Used for this Rule:
+* **Cargo / Material**: The name of the equipment or materials being shipped (e.g., *Cone Crusher Liners*, *HDPE Pipes*).
+* **Expected Date**: The target arrival date agreed with the shipping contractor.
+* **Status**: Current tracking stage (*Not Started*, *In Transit*, *At Checkpoint*, *Delivered*).
+* **Alert Grace Period**: The allowable delay buffer before raising a formal alert (configured under Site Settings, standard is **2 days**).
+* **Linked Activity**: The specific site construction job that is waiting for this cargo.
 
-#### ⏱️ When and Why It Occurs:
-Remote island or mountainous mining sites rely heavily on sea barges and unpaved haul corridors vulnerable to typhoons, gale warnings, or heavy monsoon swells.
-* **`Delayed`**: Port closures, Coast Guard no-sail advisories, or washed-out bridges.
-* **`Watch`**: Approaching low-pressure area (LPA), gale warning, or forecasted monsoon surge.
+#### ⏱️ When Does It Occur?
+* This alert turns **RED (Critical)** when cargo is still **"In Transit"** or **"At Checkpoint"** and the calendar has passed the **Expected Date by more than 2 days**.
+* **Plain Example**:
+  * Expected arrival date is **August 20**.
+  * Grace period is **2 days** (until August 22).
+  * On **August 23**, if the status is still *In Transit*, the system triggers an immediate **Delayed Shipment Alert**.
 
-#### 🔴 / 🟡 Severity:
-* ⛔ **Critical**: When `weatherFlag == 'Delayed'` (physical movement halted).
-* ⚠ **Warning**: When `weatherFlag == 'Watch'` (impending disruption within 24–48 hours).
+#### 💥 What Happens on Site?
+* The system checks which construction task is linked to this shipment and flags it (for example: *"Affects activity: Primary Crusher Mechanical Erection"*).
 
-#### 🌊 Cascading Impact:
-* **Logistics**: Cargo vessels anchor at sea, accumulating daily barge charter / demurrage costs.
-* **Workforce (Module 5)**: Incoming and outgoing worker rotation flights/ferries sharing the same corridor are delayed, risking un-manned operator shifts on site.
-
-#### 🛠️ SOP / Corrective Action:
-1. Divert incoming cargo to regional staging warehouses (*Cebu Hub* or *Surigao Port*).
-2. Issue hotel billeting vouchers for off-rotation crew waiting at hub ports.
+#### ✅ What Action is Needed?
+1. Contact the shipping agent or barge captain to get the exact location.
+2. Adjust the construction work schedule so laborers are not standing idle waiting for materials.
 
 ---
 
-### 3. Procurement Lead-Time & Must-Order-By Expiration
+### Rule 2: Route Weather Alert
 
-#### 📋 Fields Involved:
-* **`materials.name` (`name`)**: Name of spare part, structural steel, or consumable.
-* **`materials.need_by` (`needBy`)**: Hard construction milestone date when the material must physically sit in the site laydown yard.
-* **`materials.supplier_lead_days` (`supplierLeadDays`)**: Vendor manufacturing and factory testing time in days.
-* **`materials.transport_lead_days` (`transportLeadDays`)**: Multi-modal shipping time from factory to remote site laydown in days.
-* **`materials.buffer_days` (`bufferDays`)**: Risk contingency buffer (e.g., customs clearance, weather allowance) in days.
-* **`materials.status` (`status`)**: Stage: `Ordered`, `Regional Hub`, `Provincial Port`, `Site Laydown`, `Installed`.
+#### 📱 Fields in the App Used for this Rule:
+* **Weather**: The sea or road corridor condition (*None*, *Watch*, *Delayed*).
+* **Route**: The travel path (e.g., *Cebu Port to Lipata Port to Site*).
+* **Current Leg Mode**: How it travels (*Truck*, *Barge/Boat*, *Final-Mile Road*).
+* **Material / Cargo**: The shipment travelling through that corridor.
 
-#### ⏱️ When and Why It Occurs:
-The system continuously back-calculates the **Must-Order-By Date** required to ensure on-time delivery:
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Occurs when a route is marked **"Delayed"** (e.g., Coast Guard has suspended boat sailings due to Typhoon Signal No. 2, or roads are blocked by landslides).
+* **⚠ Warning (Amber)**: Occurs when a route is on **"Watch"** (e.g., Gale warning, heavy rains forecasted within 24 to 48 hours).
 
-$$\text{Total Lead Time} = \text{supplierLeadDays} + \text{transportLeadDays} + \text{bufferDays}$$
-$$\text{Must-Order-By Date} = \text{needBy} - \text{Total Lead Time}$$
-$$\text{Trigger Condition: } \text{Current Date} > \text{Must-Order-By Date} \quad \text{AND} \quad \text{status} \text{ is not yet Ordered}$$
+#### 💥 What Happens on Site?
+* Sea barges must anchor and wait, which incurs extra daily boat rental and port fees (Demurrage).
+* Workers travelling to or from the mine for their shift rotation might get stranded in port cities.
 
-* *Example*: If an item is needed on site by `Nov 30`, with 45 days supplier lead time, 20 days transport, and 10 days buffer ($\text{Total} = 75\text{ days}$), the `Must-Order-By Date` is **`Sept 16`**. If `Sept 17` arrives and no PO has been released, the alert fires.
-
-#### 🔴 Severity:
-* ⛔ **Critical**: Every day of order delay results in a day of schedule delay on site.
-
-#### 🌊 Cascading Impact:
-Direct stockout during planned shutdown or construction installation windows.
-
-#### 🛠️ SOP / Corrective Action:
-1. Immediately release Purchase Order (PO) to the **Primary Supplier**.
-2. If primary lead time is compromised, switch to the pre-approved **Backup Tier-2 Supplier** listed in Module 2.
+#### ✅ What Action is Needed?
+1. Secure sensitive cargo at regional transit hubs.
+2. Arrange temporary hotel lodging for stranded personnel at transit ports.
 
 ---
 
-### 4. Safety & Operating Certification Expiry
+### Rule 3: Must-Order-By Date Passed (Procurement Lead Time)
 
-#### 📋 Fields Involved:
-* **`workforce.name` (`name`)**: Worker's full name.
-* **`workforce.trade` (`trade`)**: Job specialty (e.g., *Crane Operator*, *Substation Electrician*, *DOLE Rigger*).
-* **`workforce.cert_name` (`certName`)**: Name of regulatory certificate or operating license (e.g., *TESDA NC II Heavy Equipment*, *DOLE BOSH*).
-* **`workforce.cert_expiry` (`certExpiry`)**: Expiration date of the certification.
-* **`workforce.rotation_out` (`rotationOut`)**: Scheduled fly-out date for this worker's current on-site tour.
-* **`settings.cert_alert_days` (`certAlertDays`)**: Advance warning window in days (default: `30 days`).
+#### 📱 Fields in the App Used for this Rule:
+* **Item**: Name of the material or spare part.
+* **Need By**: The required date when the material must physically sit on site ready for work.
+* **Supplier Lead (Days)**: How many days the factory takes to manufacture and pack the item.
+* **Transport Lead (Days)**: How many days it takes to ship from the supplier to the mine site.
+* **Buffer (Days)**: Extra safety days added for customs clearance or unexpected shipping delays.
+* **Must Order By (Calculated by App)**: The latest date you can place the purchase order.
+  * **Formula**: `Need By Date` minus `(Supplier Lead + Transport Lead + Buffer Days)`
+* **Status**: Procurement state (*Ordered*, *Regional Hub*, *Provincial Port*, *Site Laydown*, *Installed*).
 
-#### ⏱️ When and Why It Occurs:
-Mine safety regulations (DOLE / MGB) prohibit uncertified operators from running cranes, high-voltage substations, or heavy mining equipment.
+#### ⏱️ When Does It Occur?
+* This alert turns **RED (Critical)** when today's date has passed the calculated **Must-Order-By Date** and the material has **not yet been marked as "Ordered"**.
+* **Plain Example**:
+  * You need steel plates on site on **December 1**.
+  * Supplier takes **30 days** to make them.
+  * Shipping takes **15 days**.
+  * Safety buffer is **5 days**.
+  * Total lead time is **50 days**.
+  * The **Must-Order-By Date** is **October 12**.
+  * If October 13 arrives and the status is still not *Ordered*, the system immediately raises a **Critical Procurement Warning**.
 
-$$\text{Days Remaining} = \text{certExpiry} - \text{Current Date}$$
-$$\text{Trigger Condition: } \text{Days Remaining} \le \text{settings.certAlertDays}$$
+#### 💥 What Happens on Site?
+* If you do not order now, the material will arrive after the installation start date, shutting down the work crew.
 
-#### 🔴 / 🟡 Severity:
-* ⛔ **Critical**: When $\text{Days Remaining} \le 7\text{ days}$ (immediate grounding risk).
-* ⚠ **Warning**: When $8 \le \text{Days Remaining} \le \text{certAlertDays}$ ($8\text{–}30\text{ days}$).
-
-#### 🌊 Cascading Impact:
-* If a crane operator's cert expires while on site, the crane cannot operate legally, halting heavy structural lifts.
-
-#### 🛠️ SOP / Corrective Action:
-1. Compare `certExpiry` with `rotationOut`. If the certificate expires *before* the worker's scheduled fly-out, arrange for early rotation or schedule third-party testing on site.
-2. Dispatch a certified replacement worker from the off-rotation pool.
-
----
-
-### 5. Fuel Stock Runout (Site Autonomy Depletion)
-
-#### 📋 Fields Involved:
-* **`settings.fuel_stock_liters` (`fuelStockLiters`)**: Total live diesel volume physically stored in site bulk tanks.
-* **`fuel_log.liters` (`liters`)**: Volume of diesel drawn or consumed in daily logs.
-* **`fuel_log.type` (`type`)**: Filtered for entries where `type === 'Consumption'`.
-* **`settings.fuel_alert_days` (`fuelAlertDays`)**: Minimum required days of fuel autonomy buffer (default: `7 days`).
-
-#### ⏱️ When and Why It Occurs:
-Remote mine sites operate off-grid powered by diesel generator power stations and heavy diesel haul fleets. The system calculates historical consumption velocity and estimates runway:
-
-$$\text{Average Daily Burn (L/day)} = \frac{\sum \text{Consumption Liters}}{\text{Number of Consumption Log Entries}}$$
-$$\text{Days of Fuel Remaining} = \frac{\text{settings.fuelStockLiters}}{\text{Average Daily Burn}}$$
-$$\text{Trigger Condition: } \text{Days of Fuel Remaining} \le \text{settings.fuelAlertDays}$$
-
-* *Example*: If the site tanks hold $35,000\text{ L}$ and the average draw is $7,000\text{ L/day}$, fuel runway is **$5\text{ days}$**. Since $5 \le 7$, a warning alert is triggered.
-
-#### 🔴 / 🟡 Severity:
-* ⛔ **Critical**: When Fuel Runway $\le 3\text{ days}$ (total blackout and site shutdown risk).
-* ⚠ **Warning**: When $4 \le \text{Fuel Runway} \le \text{fuelAlertDays}$ ($4\text{–}7\text{ days}$).
-
-#### 🌊 Cascading Impact:
-* Primary power plant shuts down, halting ball mills, crushers, camp power, and water treatment.
-
-#### 🛠️ SOP / Corrective Action:
-1. Dispatch emergency fuel tanker barge from regional fuel depot.
-2. Implement fuel conservation protocol (shut down non-critical auxiliary generators and reduce non-essential haulage).
+#### ✅ What Action is Needed?
+1. Release the Purchase Order (PO) to the **Primary Supplier** immediately.
+2. If the primary supplier is overloaded, switch to the **Backup Supplier** listed in the Supplier Directory.
 
 ---
 
-### 6. Activity Budget Cost Overrun & Variance
+### Rule 4: Expiring Worker Certification
 
-#### 📋 Fields Involved:
-* **`activities.name` (`name`)**: Work Breakdown Structure (WBS) activity title (e.g., *Primary Crusher Civils*).
-* **`activities.cost_code` (`costCode`)**: Cost allocation code (e.g., `C-101`, `M-204`, `E-301`).
-* **`activities.budget` (`budget`)**: Authorized financial budget ceiling for this cost code.
-* **`activities.committed` (`committed`)**: Purchase orders issued, contracts signed, and committed spend.
-* **`activities.in_transit` (`inTransit`)**: Freight and active logistics expenditures currently underway.
-* **`activities.installed` (`installed`)**: Value of physically completed, inspected work on site.
-* **`activities.variance` (Calculated)**: Total financial health indicator.
+#### 📱 Fields in the App Used for this Rule:
+* **Worker**: Full name of the employee or technician.
+* **Trade / Role**: Their assigned job (e.g., *Crane Operator*, *High Voltage Electrician*, *Heavy Equipment Mechanic*).
+* **Certification**: The mandatory safety or government license (e.g., *TESDA Crane NC II*, *DOLE Safety Officer*).
+* **Cert Expiry**: The official expiration date on their license card.
+* **Rotation Out**: The date when this worker is scheduled to fly out from the site for their rest days.
+* **Alert Window**: How many days before expiry the app starts notifying you (default is **30 days**).
 
-#### ⏱️ When and Why It Occurs:
-The total financial exposure of any activity is the sum of committed funds, in-transit logistics, and executed works.
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Triggers when the certificate has **7 days or fewer** remaining before expiring.
+* **⚠ Warning (Amber)**: Triggers when the certificate has **between 8 and 30 days** remaining.
 
-$$\text{Total Spend} = \text{committed} + \text{inTransit} + \text{installed}$$
-$$\text{Variance} = \text{budget} - \text{Total Spend}$$
-$$\text{Trigger Condition: } \text{Total Spend} > \text{budget} \quad (\text{Variance} < 0)$$
+#### 💥 What Happens on Site?
+* Mine safety regulations strictly prohibit uncertified operators from running heavy equipment.
+* If a crane operator's license expires while on site, the crane cannot operate, stopping all heavy lifting work.
 
-#### 🟡 Severity:
-* ⚠ **Warning**: Financial variance requires commercial audit and contingency allocation.
-
-#### 🌊 Cascading Impact:
-* Depletes project contingency reserves and signals contractor over-billing or scope creep.
-
-#### 🛠️ SOP / Corrective Action:
-1. Review committed invoices and contractor claims against bill of quantities (BOQ).
-2. Request a formal Scope Change Order (SCO) or Management Reserve drawdown from project leadership.
+#### ✅ What Action is Needed?
+1. Check if the worker is scheduled to fly out (**Rotation Out**) before the license expires.
+2. Schedule their renewal test during their off-rotation rest period, or bring in a certified backup operator.
 
 ---
 
-### 7. Workforce Attendance & Daily Shift Muster
+### Rule 5: Low Fuel Stock (Site Autonomy Depletion)
 
-#### 📋 Fields Involved:
-* **`workforce_attendance.date` (`date`)**: Selected muster date.
-* **`workforce_attendance.worker_id` (`workerId`)**: Linked worker record.
-* **`workforce_attendance.status` (`status`)**: Daily status (`Present`, `Late`, `Absent`, `Off Rotation`).
-* **`workforce_attendance.time_in` / `time_out` (`timeIn`, `timeOut`)**: Shift entry and exit timestamps.
-* **`workforce_attendance.hours_worked` (`hoursWorked`)**: Computed shift duration in hours.
+#### 📱 Fields in the App Used for this Rule:
+* **Current Fuel Stock (L)**: Total liters of diesel currently in the main site storage tanks.
+* **Liters Consumed**: Daily fuel drawn by generators, excavators, and dump trucks recorded in the Fuel Log.
+* **Average Daily Consumption (Calculated)**: The average liters burned per day across all logged entries.
+* **Days of Fuel Remaining (Calculated)**: `Current Fuel Stock` divided by `Average Daily Consumption`.
+* **Alert Threshold (Days)**: Minimum safety runway (configured in Settings, default is **7 days**).
 
-#### ⏱️ Operational Tracking:
-* Allows supervisors to inspect attendance for **`Today`**, **`Yesterday`**, or any calendar date.
-* Flags unlogged personnel on shift days to prevent un-manned operating posts.
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Triggers when remaining fuel is down to **3 days or less**.
+* **⚠ Warning (Amber)**: Triggers when remaining fuel is between **4 and 7 days**.
+* **Plain Example**:
+  * The site tanks have **28,000 Liters** of diesel.
+  * The site burns an average of **7,000 Liters per day**.
+  * Fuel runway is **4 days** ($28,000 \div 7,000$).
+  * Since 4 days is less than the 7-day safety threshold, the system raises a **Fuel Warning**.
+
+#### 💥 What Happens on Site?
+* If fuel runs out, the main power generators stop, shutting down processing mills, water treatment, camp lights, and mobile heavy equipment.
+
+#### ✅ What Action is Needed?
+1. Expedite the next fuel tanker barge or road tanker delivery immediately.
+2. If delivery is delayed, turn off non-essential camp air conditioners and prioritize primary power for processing equipment.
+
+---
+
+### Rule 6: Activity Budget Cost Overrun
+
+#### 📱 Fields in the App Used for this Rule:
+* **Activity**: Name of the construction or maintenance job (e.g., *Primary Crusher Foundation*).
+* **Cost Code**: The financial accounting code (e.g., `C-101`, `M-204`).
+* **Budget**: The approved maximum money allocated for this activity.
+* **Committed**: Purchase orders and contractor contracts already signed.
+* **In Transit**: Freight and shipping costs currently on the way.
+* **Installed / Earned**: Work already completed and paid on site.
+* **Total Spent (Calculated)**: `Committed + In Transit + Installed`.
+* **Variance (Calculated)**: `Budget` minus `Total Spent`.
+
+#### ⏱️ When Does It Occur?
+* **⚠ Warning (Amber)**: Triggers whenever **Total Spent** is greater than the **Budget** (resulting in a negative variance shown in red in the app).
+* **Plain Example**:
+  * Budget is **₱1,000,000**.
+  * Committed is **₱500,000**, In-Transit is **₱200,000**, and Installed work is **₱400,000**.
+  * Total Spent is **₱1,100,000**.
+  * The activity is **₱100,000 over budget**, triggering an immediate Cost Variance Warning.
+
+#### 💥 What Happens on Site?
+* The activity is burning through money faster than planned, eating into the overall project contingency reserve.
+
+#### ✅ What Action is Needed?
+1. Review contractor invoices to check for overcharging or unapproved extra work.
+2. Request a formal management budget approval or change order if the scope of work was expanded.
+
+---
+
+### 📅 Bonus: Workforce Daily Attendance & Time Tracking
+
+#### 📱 Fields in the App:
+* **Selected Date**: Switch easily between **Today**, **Yesterday**, or pick any date from the calendar.
+* **Worker & Trade**: Worker full name and job role.
+* **Attendance Status**:
+  * 🟢 **Present**: Worked a full normal shift.
+  * 🟡 **Late**: Arrived late or worked a partial shift.
+  * 🔴 **Absent**: Did not report for duty on their scheduled shift day.
+  * ⚪ **Off Rotation**: Worker is currently home on their rest cycle.
+* **Time In**: Actual time the worker clocked in for the shift (e.g., `07:00`).
+* **Time Out**: Actual time the worker clocked out at the end of the shift (e.g., `17:00`).
+* **Hours Worked**: The app automatically computes total shift hours (e.g., `07:00` to `17:00` = `10.0 hours`).
+* **Notes / Work Area**: Specific location or task (e.g., *Crusher foundation formwork*, *Night shift OT*).
