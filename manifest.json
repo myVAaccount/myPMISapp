@@ -3,6 +3,8 @@
   "short_name": "Site PMIS",
   "description": "Offline-first project management for a remote mining processing facility",
   "start_url": "./index.html",
+  "scope": "./",
+  "id": "site-pmis-app",
   "display": "standalone",
   "background_color": "#17140F",
   "theme_color": "#17140F",
