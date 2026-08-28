@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Site PMIS — Remote Mining Facility</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#17140F;
+    --surface:#221D17;
+    --surface2:#2B241C;
+    --border:#3D342A;
+    --text:#F3ECDF;
+    --text-dim:#A99A85;
+    --amber:#E8871E;
+    --amber-dim:#7A4D18;
+    --rust:#C4432B;
+    --olive:#7A9070;
+    --steel:#5C8AA6;
+    --mono:'JetBrains Mono', monospace;
+    --disp:'Oswald', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  #root{min-height:100vh;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+  .app{display:flex;min-height:100vh;}
+  .sidebar{
+    width:220px;flex-shrink:0;background:var(--surface);
+    border-right:1px solid var(--border);padding:20px 0;
+    display:flex;flex-direction:column;
+  }
+  .brand{
+    padding:0 18px 18px 18px;border-bottom:1px solid var(--border);margin-bottom:10px;
+  }
+  .brand-mark{
+    font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:0.5px;
+    color:var(--text);display:flex;align-items:center;gap:8px;
+  }
+  .brand-mark .dot{width:10px;height:10px;border-radius:50%;background:var(--amber);
+    box-shadow:0 0 8px var(--amber);}
+  .brand-sub{font-size:11px;color:var(--text-dim);margin-top:4px;letter-spacing:0.4px;text-transform:uppercase;}
+  .nav{flex:1;padding:6px 10px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;
+    color:var(--text-dim);cursor:pointer;font-size:13.5px;font-weight:500;margin-bottom:2px;
+    border-left:3px solid transparent;transition:background .15s,color .15s;
+  }
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:var(--surface2);color:var(--amber);border-left:3px solid var(--amber);}
+  .nav-num{font-family:var(--mono);font-size:11px;color:var(--text-dim);width:16px;}
+  .nav-badge{
+    margin-left:auto;background:var(--rust);color:#fff;font-family:var(--mono);
+    font-size:10px;padding:1px 6px;border-radius:10px;
+  }
+  .sidebar-foot{padding:14px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 26px;border-bottom:1px solid var(--border);background:var(--surface);
+    position:sticky;top:0;z-index:5;
+  }
+  .topbar-title{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:0.3px;}
+  .topbar-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .pulse-strip{display:flex;align-items:center;gap:14px;}
+  .pulse-chip{
+    display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;
+    font-family:var(--mono);font-size:12px;border:1px solid var(--border);background:var(--surface2);
+  }
+  .pulse-chip.critical{border-color:var(--rust);color:#F2C4B8;}
+  .pulse-chip.warning{border-color:var(--amber-dim);color:#F0D3A8;}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;}
+  .pulse-dot.critical{background:var(--rust);animation:pulse 1.4s infinite;}
+  .pulse-dot.warning{background:var(--amber);}
+  .pulse-dot.ok{background:var(--olive);}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(196,67,43,.6);}70%{box-shadow:0 0 0 7px rgba(196,67,43,0);}100%{box-shadow:0 0 0 0 rgba(196,67,43,0);}}
+  .sync-chip{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-dim);font-family:var(--mono);}
+  .sync-btn{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--body);
+  }
+  .sync-btn:hover{border-color:var(--amber);}
+
+  .content{padding:24px 26px;flex:1;overflow-x:hidden;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
+  .kpi-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;
+    border-top:2px solid var(--amber-dim);
+  }
+  .kpi-card.critical{border-top-color:var(--rust);}
+  .kpi-card.ok{border-top-color:var(--olive);}
+  .clickable{cursor:pointer;transition:border-color .15s,transform .1s;}
+  .clickable:hover{border-color:var(--amber);}
+  .kpi-card.clickable:hover{transform:translateY(-1px);}
+  .alert-row.clickable:hover{background:#332B21;}
+  .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-dim);margin-bottom:6px;}
+  .kpi-value{font-family:var(--disp);font-size:26px;font-weight:600;}
+  .kpi-foot{font-size:11.5px;color:var(--text-dim);margin-top:4px;}
+
+  .panel{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:18px 20px;margin-bottom:20px;
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .panel-title{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:0.3px;}
+  .panel-sub{font-size:12px;color:var(--text-dim);}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+  .btn{
+    background:var(--amber);color:#1A1305;border:none;padding:8px 14px;border-radius:6px;
+    font-weight:600;font-size:12.5px;cursor:pointer;font-family:var(--body);
+  }
+  .btn:hover{background:#f5952b;}
+  .btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn.secondary:hover{border-color:var(--text-dim);}
+  .btn.danger{background:transparent;color:var(--rust);border:1px solid var(--rust);}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;
+    color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;
+  }
+  td{padding:9px 10px;border-bottom:1px solid #2A241C;vertical-align:middle;}
+  tr:hover td{background:var(--surface2);}
+  .num{font-family:var(--mono);}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{
+    background:none;border:1px solid var(--border);color:var(--text-dim);
+    width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:12px;
+  }
+  .icon-btn:hover{color:var(--text);border-color:var(--text-dim);}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-family:var(--mono);font-weight:500;}
+  .badge.ordered{background:#2A3242;color:#9DBBE0;}
+  .badge.hub{background:#3A2E1C;color:#E8C285;}
+  .badge.port{background:#3A2E1C;color:#E8C285;}
+  .badge.laydown{background:#2E3A2A;color:#B3D19A;}
+  .badge.installed{background:#233A2C;color:#8FCB9F;}
+  .badge.delivered{background:#233A2C;color:#8FCB9F;}
+  .badge.transit{background:#3A2E1C;color:#E8C285;}
+  .badge.checkpoint{background:#3A2E1C;color:#E8C285;}
+  .badge.notstarted{background:#2A2A2A;color:#B0A995;}
+  .badge.none{background:#233A2C;color:#8FCB9F;}
+  .badge.watch{background:#3A2E1C;color:#E8C285;}
+  .badge.delayed{background:#3A1F1A;color:#E8A38F;}
+  .badge.onsite{background:#233A2C;color:#8FCB9F;}
+  .badge.offrotation{background:#2A2A2A;color:#B0A995;}
+  .badge.primary{background:#233A2C;color:#8FCB9F;}
+  .badge.backup{background:#2A2A2A;color:#B0A995;}
+  .badge.local{background:#2A2A2A;color:#B0A995;}
+  .badge.synced{background:#233A2C;color:#8FCB9F;}
+
+  .alert-row{
+    display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:7px;
+    border:1px solid var(--border);margin-bottom:9px;background:var(--surface2);
+  }
+  .alert-row.critical{border-left:3px solid var(--rust);}
+  .alert-row.warning{border-left:3px solid var(--amber);}
+  .alert-icon{font-family:var(--mono);font-size:13px;padding-top:1px;}
+  .alert-row.critical .alert-icon{color:var(--rust);}
+  .alert-row.warning .alert-icon{color:var(--amber);}
+  .alert-title{font-weight:600;font-size:13.5px;margin-bottom:2px;}
+  .alert-detail{font-size:12.5px;color:var(--text-dim);}
+  .alert-cascade{font-size:11.5px;color:var(--text-dim);margin-top:5px;font-family:var(--mono);}
+
+  .empty-state{padding:26px;text-align:center;color:var(--text-dim);font-size:13px;}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(10,8,5,0.7);display:flex;align-items:center;
+    justify-content:center;z-index:50;padding:20px;
+  }
+  .modal{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:22px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+  }
+  .modal-title{font-family:var(--disp);font-size:17px;font-weight:600;margin-bottom:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11.5px;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;}
+  .field input,.field select,.field textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:6px;font-size:13px;font-family:var(--body);
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--amber);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .settings-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .settings-row .field{margin-bottom:0;min-width:160px;}
+  .chart-wrap{position:relative;height:230px;}
+  .toast{
+    position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--amber);
+    color:var(--text);padding:10px 16px;border-radius:7px;font-size:13px;z-index:60;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useMemo} = React;
+
+/* ---------- helpers ---------- */
+const uid = () => Math.random().toString(36).slice(2,10);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const daysBetween = (a,b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const addDays = (dateStr, n) => { const d = new Date(dateStr); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const fmtMoney = (n) => '₱' + (Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-PH',{month:'short',day:'2-digit',year:'numeric'}) : '—';
+const slug = (s) => (s||'').toLowerCase().replace(/[^a-z]/g,'');
+
+/* ---------- Supabase config ---------- */
+const SUPABASE_URL = 'https://lsqphqributzwcffyhsv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzcXBocXJpYnV0endjZmZ5aHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NzI1MjIsImV4cCI6MjEwMzQ0ODUyMn0.H82vmHBOTRwuegGdh6hnAf06LbxK-9LfwLSVoE7kUX8';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- table <-> app-state field maps ---------- */
+const TABLE_MAPS = {
+  materials: {table:'materials', fields:{name:'name', supplier:'supplier', qty:'qty', unitCost:'unit_cost', supplierLeadDays:'supplier_lead_days', transportLeadDays:'transport_lead_days', bufferDays:'buffer_days', needBy:'need_by', status:'status'}},
+  suppliers: {table:'suppliers', fields:{name:'name', item:'item', tier:'tier', avgLeadDays:'avg_lead_days', reliabilityPct:'reliability_pct', route:'route'}},
+  shipments: {table:'shipments', fields:{materialName:'material_name', route:'route', mode:'mode', legStatus:'leg_status', expectedDate:'expected_date', actualDate:'actual_date', weatherFlag:'weather_flag', freight:'freight', fuelSurcharge:'fuel_surcharge', demurrage:'demurrage', handling:'handling', insurance:'insurance'}},
+  fuel: {table:'fuel_log', fields:{date:'date', type:'type', liters:'liters', cost:'cost', notes:'notes'}},
+  workforce: {table:'workforce', fields:{name:'name', trade:'trade', rotationIn:'rotation_in', rotationOut:'rotation_out', certName:'cert_name', certExpiry:'cert_expiry', status:'status'}},
+  activities: {table:'activities', fields:{name:'name', costCode:'cost_code', budget:'budget', committed:'committed', inTransit:'in_transit', installed:'installed', linkedShipmentId:'linked_shipment_id'}},
+  fieldReports: {table:'field_reports', fields:{date:'date', type:'type', description:'description', photoCount:'photo_count', syncStatus:'sync_status'}},
+};
+
+const toSnakeRow = (stateKey, obj) => {
+  const map = TABLE_MAPS[stateKey].fields;
+  const row = {};
+  Object.entries(map).forEach(([camel,snake]) => {
+    if(obj[camel] !== undefined) row[snake] = (obj[camel] === '' ? null : obj[camel]);
+  });
+  return row;
+};
+const toCamelRow = (stateKey, row) => {
+  const map = TABLE_MAPS[stateKey].fields;
+  const obj = {id: row.id};
+  Object.entries(map).forEach(([camel,snake]) => { obj[camel] = row[snake]; });
+  return obj;
+};
+
+async function sbFetchAll(stateKey){
+  const {data, error} = await supabaseClient.from(TABLE_MAPS[stateKey].table).select('*').order('created_at', {ascending:true});
+  if(error) throw error;
+  return data.map(r => toCamelRow(stateKey, r));
+}
+async function sbInsert(stateKey, record){
+  const {data, error} = await supabaseClient.from(TABLE_MAPS[stateKey].table).insert(toSnakeRow(stateKey, record)).select().single();
+  if(error) throw error;
+  return toCamelRow(stateKey, data);
+}
+async function sbUpdate(stateKey, id, record){
+  const {data, error} = await supabaseClient.from(TABLE_MAPS[stateKey].table).update(toSnakeRow(stateKey, record)).eq('id', id).select().single();
+  if(error) throw error;
+  return toCamelRow(stateKey, data);
+}
+async function sbDelete(stateKey, id){
+  const {error} = await supabaseClient.from(TABLE_MAPS[stateKey].table).delete().eq('id', id);
+  if(error) throw error;
+}
+async function sbFetchSettings(){
+  const {data, error} = await supabaseClient.from('settings').select('*').eq('id',1).single();
+  if(error) throw error;
+  return {fuelStockLiters:data.fuel_stock_liters, fuelAlertDays:data.fuel_alert_days, certAlertDays:data.cert_alert_days, checkpointGraceDays:data.checkpoint_grace_days};
+}
+async function sbUpdateSettings(settings){
+  const {error} = await supabaseClient.from('settings').update({
+    fuel_stock_liters: settings.fuelStockLiters,
+    fuel_alert_days: settings.fuelAlertDays,
+    cert_alert_days: settings.certAlertDays,
+    checkpoint_grace_days: settings.checkpointGraceDays,
+  }).eq('id',1);
+  if(error) throw error;
+}
+
+function useStore(){
+  const [data,setData] = useState(null);
+  const [syncedAt,setSyncedAt] = useState(null);
+  const [saving,setSaving] = useState(false);
+  const [error,setError] = useState(null);
+
+  const loadAll = async () => {
+    try{
+      const [materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings] = await Promise.all([
+        sbFetchAll('materials'), sbFetchAll('suppliers'), sbFetchAll('shipments'), sbFetchAll('fuel'),
+        sbFetchAll('workforce'), sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
+      ]);
+      setData({materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings});
+      setSyncedAt(new Date());
+      setError(null);
+    }catch(e){
+      setError((e && e.message) || 'Could not reach Supabase. Check the URL/key and that the schema has been run.');
+    }
+  };
+
+  useEffect(()=>{ loadAll(); },[]);
+
+  // mutate('materials','insert'|'update'|'delete', payload)
+  const mutate = async (stateKey, action, payload) => {
+    setSaving(true);
+    try{
+      if(action === 'insert'){
+        const created = await sbInsert(stateKey, payload);
+        setData(prev => ({...prev, [stateKey]: [...prev[stateKey], created]}));
+      } else if(action === 'update'){
+        const updated = await sbUpdate(stateKey, payload.id, payload);
+        setData(prev => ({...prev, [stateKey]: prev[stateKey].map(r => r.id === payload.id ? updated : r)}));
+      } else if(action === 'delete'){
+        await sbDelete(stateKey, payload);
+        setData(prev => ({...prev, [stateKey]: prev[stateKey].filter(r => r.id !== payload)}));
+      }
+      setSyncedAt(new Date());
+      setError(null);
+    }catch(e){
+      setError((e && e.message) || 'Save failed.');
+    }
+    setSaving(false);
+  };
+
+  const mutateSettings = async (nextSettings) => {
+    setSaving(true);
+    try{
+      await sbUpdateSettings(nextSettings);
+      setData(prev => ({...prev, settings: nextSettings}));
+      setSyncedAt(new Date());
+      setError(null);
+    }catch(e){
+      setError((e && e.message) || 'Save failed.');
+    }
+    setSaving(false);
+  };
+
+  return {data, mutate, mutateSettings, syncedAt, saving, error, reload:loadAll};
+}
+
+/* ---------- generic CRUD table ---------- */
+function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, renderExtra}){
+  const [modalRow, setModalRow] = useState(null); // null = closed, {} = new, {...} = edit
+  const [form, setForm] = useState({});
+
+  const openNew = () => { setForm({}); setModalRow({}); };
+  const openEdit = (row) => { setForm({...row}); setModalRow(row); };
+  const close = () => { setModalRow(null); setForm({}); };
+
+  const submit = (e) => {
+    e.preventDefault();
+    const isNew = !(modalRow && modalRow.id);
+    const record = isNew ? {...form} : {...form, id: modalRow.id};
+    onSave(record, isNew);
+    close();
+  };
+
+  return (
+    <div className="panel">
+      <div className="panel-head">
+        <div>
+          <div className="panel-title">{title}</div>
+          {sub && <div className="panel-sub">{sub}</div>}
+        </div>
+        <button className="btn" onClick={openNew}>+ {addLabel || 'Add'}</button>
+      </div>
+      {rows.length === 0 ? (
+        <div className="empty-state">No records yet. Add the first one to start tracking.</div>
+      ) : (
+        <table>
+          <thead><tr>
+            {columns.map(c => <th key={c.key}>{c.label}</th>)}
+            <th></th>
+          </tr></thead>
+          <tbody>
+            {rows.map(row => (
+              <tr key={row.id}>
+                {columns.map(c => (
+                  <td key={c.key} className={c.numeric ? 'num' : ''}>
+                    {c.render ? c.render(row) : row[c.key]}
+                  </td>
+                ))}
+                <td>
+                  <div className="row-actions">
+                    <button className="icon-btn" onClick={()=>openEdit(row)} title="Edit">✎</button>
+                    <button className="icon-btn" onClick={()=>onDelete(row.id)} title="Delete">✕</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {renderExtra}
+
+      {modalRow !== null && (
+        <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) close(); }}>
+          <div className="modal">
+            <div className="modal-title">{modalRow.id ? 'Edit record' : addLabel || 'New record'}</div>
+            <form onSubmit={submit}>
+              {columns.filter(c=>c.field).map(c => (
+                <div className="field" key={c.key}>
+                  <label>{c.label}</label>
+                  {c.field.type === 'select' ? (
+                    <select
+                      value={form[c.key] ?? ''}
+                      onChange={e=>setForm({...form,[c.key]:e.target.value})}
+                      required={c.field.required}
+                    >
+                      <option value="" disabled>Select…</option>
+                      {c.field.options.map(o => (
+                        <option key={o} value={o}>{c.field.optionLabels ? (c.field.optionLabels[o] ?? o) : o}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={c.field.type || 'text'}
+                      step={c.field.type==='number' ? 'any' : undefined}
+                      value={form[c.key] ?? ''}
+                      onChange={e=>setForm({...form,[c.key]: c.field.type==='number' ? e.target.value : e.target.value})}
+                      required={c.field.required}
+                      placeholder={c.field.placeholder || ''}
+                    />
+                  )}
+                </div>
+              ))}
+              <div className="modal-actions">
+                <button type="button" className="btn secondary" onClick={close}>Cancel</button>
+                <button type="submit" className="btn">Save record</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- alert engine (Module 7) ---------- */
+function computeAlerts(data){
+  if(!data) return [];
+  const alerts = [];
+  const today = todayISO();
+  const grace = data.settings.checkpointGraceDays ?? 2;
+
+  // Shipment behind checkpoint
+  data.shipments.forEach(s => {
+    if(s.legStatus !== 'Delivered' && s.expectedDate){
+      const behind = daysBetween(s.expectedDate, today) - grace;
+      if(behind > 0){
+        const linked = data.activities.filter(a => a.linkedShipmentId === s.id);
+        alerts.push({
+          severity:'critical',
+          module:'transport',
+          title: `Shipment behind schedule — ${s.materialName || s.route || 'shipment'}`,
+          detail: `Expected ${fmtDate(s.expectedDate)}, still "${s.legStatus}" (${behind}d past grace period).`,
+          cascade: linked.length ? `Affects activity: ${linked.map(a=>a.name).join(', ')}` : 'No linked activity on record.',
+        });
+      }
+    }
+    if(s.weatherFlag && s.weatherFlag !== 'None'){
+      alerts.push({
+        severity: s.weatherFlag === 'Delayed' ? 'critical' : 'warning',
+        module:'transport',
+        title: `Weather flag on route — ${s.route || 'unnamed route'}`,
+        detail: `Shipment "${s.materialName || s.id}" flagged ${s.weatherFlag.toLowerCase()} on this corridor.`,
+        cascade: 'Crew changes sharing this route/window may also be at risk.',
+      });
+    }
+  });
+
+  // Materials past must-order-by
+  data.materials.forEach(m => {
+    if(m.status !== 'Installed'){
+      const mustOrderBy = addDays(m.needBy, -(Number(m.supplierLeadDays||0)+Number(m.transportLeadDays||0)+Number(m.bufferDays||0)));
+      if(mustOrderBy < today && m.status === 'Ordered'){
+        // already ordered, fine — only flag if not yet ordered stage is missing; skip to avoid false positives
+      }
+      if(mustOrderBy < today && !['Ordered','Regional Hub','Provincial Port','Site Laydown','Installed'].includes(m.status)){
+        alerts.push({
+          severity:'critical',
+          module:'procurement',
+          title:`Must-order-by date passed — ${m.name}`,
+          detail:`Needed on site by ${fmtDate(m.needBy)}; must-order-by was ${fmtDate(mustOrderBy)}.`,
+          cascade:'Order immediately or re-sequence dependent schedule activities.',
+        });
+      }
+    }
+  });
+
+  // Certifications expiring before next rotation
+  data.workforce.forEach(w => {
+    if(w.certExpiry){
+      const alertDays = data.settings.certAlertDays ?? 30;
+      const daysLeft = daysBetween(today, w.certExpiry);
+      if(daysLeft <= alertDays){
+        alerts.push({
+          severity: daysLeft <= 7 ? 'critical' : 'warning',
+          module:'workforce',
+          title:`Certification expiring — ${w.name}`,
+          detail:`${w.certName || 'Certification'} expires ${fmtDate(w.certExpiry)} (${daysLeft}d away). Rotation out: ${fmtDate(w.rotationOut)}.`,
+          cascade:`Role at risk of going unmanned: ${w.trade}.`,
+        });
+      }
+    }
+  });
+
+  // Fuel stock
+  const consumption = data.fuel.filter(f=>f.type==='Consumption');
+  const avgDaily = consumption.length ? consumption.reduce((s,f)=>s+Number(f.liters||0),0)/Math.max(consumption.length,1) : 0;
+  const daysOfFuel = avgDaily > 0 ? Math.round((data.settings.fuelStockLiters||0)/avgDaily) : null;
+  if(daysOfFuel !== null && daysOfFuel <= (data.settings.fuelAlertDays ?? 7)){
+    alerts.push({
+      severity: daysOfFuel <= 3 ? 'critical' : 'warning',
+      module:'transport',
+      title:'Fuel stock below threshold',
+      detail:`Approx. ${daysOfFuel} days of fuel remaining at current consumption rate (${Math.round(avgDaily)} L/day).`,
+      cascade:'Equipment and generator operation at risk of idling.',
+    });
+  }
+
+  // Cost variance
+  data.activities.forEach(a => {
+    const spent = Number(a.committed||0)+Number(a.inTransit||0)+Number(a.installed||0);
+    if(spent > Number(a.budget||0)){
+      alerts.push({
+        severity:'warning',
+        module:'costschedule',
+        title:`Cost variance — ${a.name}`,
+        detail:`Committed+in-transit+installed (${fmtMoney(spent)}) exceeds budget (${fmtMoney(a.budget)}).`,
+        cascade:`Cost code ${a.costCode}.`,
+      });
+    }
+  });
+
+  return alerts;
+}
+
+/* ---------- dashboard ---------- */
+function Dashboard({data, alerts, onNavigate}){
+  const chartRef = useRef(null);
+  const chartInstance = useRef(null);
+  const pieRef = useRef(null);
+  const pieInstance = useRef(null);
+
+  const critical = alerts.filter(a=>a.severity==='critical').length;
+  const warning = alerts.filter(a=>a.severity==='warning').length;
+
+  const totalBudget = data.activities.reduce((s,a)=>s+Number(a.budget||0),0);
+  const totalSpent = data.activities.reduce((s,a)=>s+Number(a.committed||0)+Number(a.inTransit||0)+Number(a.installed||0),0);
+  const onSiteWorkers = data.workforce.filter(w=>w.status==='On Site').length;
+  const activeShipments = data.shipments.filter(s=>s.legStatus!=='Delivered').length;
+
+  useEffect(()=>{
+    if(!chartRef.current) return;
+    if(chartInstance.current) chartInstance.current.destroy();
+    chartInstance.current = new Chart(chartRef.current, {
+      type:'bar',
+      data:{
+        labels: data.activities.map(a=>a.costCode || a.name.slice(0,10)),
+        datasets:[
+          {label:'Committed', data:data.activities.map(a=>Number(a.committed||0)), backgroundColor:'#5C8AA6'},
+          {label:'In Transit', data:data.activities.map(a=>Number(a.inTransit||0)), backgroundColor:'#E8871E'},
+          {label:'Installed', data:data.activities.map(a=>Number(a.installed||0)), backgroundColor:'#7A9070'},
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        onClick:()=>onNavigate('costschedule'),
+        onHover:(evt,els)=>{ evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+        scales:{
+          x:{stacked:true, ticks:{color:'#A99A85'}, grid:{color:'#2A241C'}},
+          y:{stacked:true, ticks:{color:'#A99A85'}, grid:{color:'#2A241C'}}
+        },
+        plugins:{legend:{labels:{color:'#F3ECDF', font:{size:11}}}}
+      }
+    });
+    return ()=>{ if(chartInstance.current) chartInstance.current.destroy(); };
+  },[data.activities]);
+
+  useEffect(()=>{
+    if(!pieRef.current) return;
+    if(pieInstance.current) pieInstance.current.destroy();
+    const statuses = ['Ordered','Regional Hub','Provincial Port','Site Laydown','Installed'];
+    const counts = statuses.map(st => data.materials.filter(m=>m.status===st).length);
+    pieInstance.current = new Chart(pieRef.current, {
+      type:'doughnut',
+      data:{ labels: statuses, datasets:[{data:counts, backgroundColor:['#5C8AA6','#E8871E','#E8871E','#7A9070','#8FCB9F']}] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        onClick:()=>onNavigate('procurement'),
+        onHover:(evt,els)=>{ evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+        plugins:{legend:{position:'bottom', labels:{color:'#A99A85', font:{size:10}, boxWidth:10}}}
+      }
+    });
+    return ()=>{ if(pieInstance.current) pieInstance.current.destroy(); };
+  },[data.materials]);
+
+  return (
+    <div>
+      <div className="kpi-row">
+        <div className={"kpi-card clickable " + (critical>0?'critical':(warning>0?'':'ok'))} onClick={()=>onNavigate('earlywarning')}>
+          <div className="kpi-label">Active Risk Flags</div>
+          <div className="kpi-value">{alerts.length}</div>
+          <div className="kpi-foot">{critical} critical · {warning} warning</div>
+        </div>
+        <div className="kpi-card clickable" onClick={()=>onNavigate('costschedule')}>
+          <div className="kpi-label">Budget vs Spend</div>
+          <div className="kpi-value">{totalBudget ? Math.round((totalSpent/totalBudget)*100) : 0}%</div>
+          <div className="kpi-foot">{fmtMoney(totalSpent)} of {fmtMoney(totalBudget)}</div>
+        </div>
+        <div className="kpi-card clickable" onClick={()=>onNavigate('transport')}>
+          <div className="kpi-label">Active Shipments</div>
+          <div className="kpi-value">{activeShipments}</div>
+          <div className="kpi-foot">{data.shipments.length} total on record</div>
+        </div>
+        <div className="kpi-card clickable" onClick={()=>onNavigate('workforce')}>
+          <div className="kpi-label">Workforce On Site</div>
+          <div className="kpi-value">{onSiteWorkers}</div>
+          <div className="kpi-foot">{data.workforce.length} total tracked</div>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">Cost & Schedule — Committed / In-Transit / Installed</div>
+              <div className="panel-sub">By activity cost code</div>
+            </div>
+          </div>
+          <div className="chart-wrap"><canvas ref={chartRef}></canvas></div>
+        </div>
+        <div className="panel">
+          <div className="panel-head">
+            <div>
+              <div className="panel-title">Material Staging Status</div>
+              <div className="panel-sub">Hub → Port → Laydown → Installed</div>
+            </div>
+          </div>
+          <div className="chart-wrap"><canvas ref={pieRef}></canvas></div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Top Active Risks</div>
+            <div className="panel-sub">Auto-generated on each sync, ranked by severity</div>
+          </div>
+        </div>
+        {alerts.length === 0 ? (
+          <div className="empty-state">No active risk flags. Site conditions nominal.</div>
+        ) : (
+          alerts.slice(0,8).map((a,i)=>(
+            <div className={"alert-row clickable " + a.severity} key={i} onClick={()=>onNavigate(a.module || 'earlywarning')}>
+              <div className="alert-icon">{a.severity==='critical' ? '⛔' : '⚠'}</div>
+              <div>
+                <div className="alert-title">{a.title}</div>
+                <div className="alert-detail">{a.detail}</div>
+                <div className="alert-cascade">↳ {a.cascade}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- module: Procurement ---------- */
+function Procurement({data, mutate}){
+  const statusOpts = ['Ordered','Regional Hub','Provincial Port','Site Laydown','Installed'];
+  const materialCols = [
+    {key:'name', label:'Item', field:{required:true}},
+    {key:'supplier', label:'Supplier', field:{required:true}},
+    {key:'qty', label:'Qty', numeric:true, field:{type:'number', required:true}},
+    {key:'unitCost', label:'Unit Cost', numeric:true, field:{type:'number', required:true}, render:r=>fmtMoney(r.unitCost)},
+    {key:'supplierLeadDays', label:'Supplier Lead (d)', numeric:true, field:{type:'number', required:true}},
+    {key:'transportLeadDays', label:'Transport Lead (d)', numeric:true, field:{type:'number', required:true}},
+    {key:'bufferDays', label:'Buffer (d)', numeric:true, field:{type:'number', required:true}},
+    {key:'needBy', label:'Need By', field:{type:'date', required:true}, render:r=>fmtDate(r.needBy)},
+    {key:'mustOrderBy', label:'Must Order By', render:r=>{
+      const d = addDays(r.needBy, -(Number(r.supplierLeadDays||0)+Number(r.transportLeadDays||0)+Number(r.bufferDays||0)));
+      const late = d < todayISO() && r.status !== 'Installed';
+      return <span style={{color: late ? '#E8A38F' : 'inherit'}}>{fmtDate(d)}</span>;
+    }},
+    {key:'status', label:'Status', field:{type:'select', options:statusOpts, required:true}, render:r=><span className={"badge "+slug(r.status)}>{r.status}</span>},
+  ];
+
+  const supplierCols = [
+    {key:'name', label:'Supplier', field:{required:true}},
+    {key:'item', label:'Item Category', field:{required:true}},
+    {key:'tier', label:'Tier', field:{type:'select', options:['Primary','Backup'], required:true}, render:r=><span className={"badge "+slug(r.tier)}>{r.tier}</span>},
+    {key:'avgLeadDays', label:'Avg Lead (d)', numeric:true, field:{type:'number', required:true}},
+    {key:'reliabilityPct', label:'Reliability %', numeric:true, field:{type:'number', required:true}},
+    {key:'route', label:'Primary Route', field:{required:true}},
+  ];
+
+  return (
+    <div>
+      <DataTable
+        title="Materials — Lead-Time-Driven Procurement"
+        sub="Must-order-by is back-calculated from need-by date minus supplier + transport lead time and buffer"
+        columns={materialCols}
+        rows={data.materials}
+        addLabel="Material"
+        onSave={(rec, isNew)=> mutate('materials', isNew ? 'insert' : 'update', rec)}
+        onDelete={(id)=> mutate('materials', 'delete', id)}
+      />
+      <DataTable
+        title="Multi-Tier Supplier Database"
+        sub="Primary and backup suppliers per critical item"
+        columns={supplierCols}
+        rows={data.suppliers}
+        addLabel="Supplier"
+        onSave={(rec, isNew)=> mutate('suppliers', isNew ? 'insert' : 'update', rec)}
+        onDelete={(id)=> mutate('suppliers', 'delete', id)}
+      />
+    </div>
+  );
+}
+
+/* ---------- module: Transportation & Logistics Cost ---------- */
+function Transportation({data, mutate, mutateSettings}){
+  const modeOpts = ['Truck','Barge/Boat','Final-Mile'];
+  const legOpts = ['Not Started','In Transit','At Checkpoint','Delivered'];
+  const weatherOpts = ['None','Watch','Delayed'];
+
+  const cols = [
+    {key:'materialName', label:'Material / Cargo', field:{required:true}},
+    {key:'route', label:'Route', field:{required:true}},
+    {key:'mode', label:'Current Leg Mode', field:{type:'select', options:modeOpts, required:true}},
+    {key:'legStatus', label:'Status', field:{type:'select', options:legOpts, required:true}, render:r=><span className={"badge "+slug(r.legStatus)}>{r.legStatus}</span>},
+    {key:'expectedDate', label:'Expected', field:{type:'date', required:true}, render:r=>fmtDate(r.expectedDate)},
+    {key:'actualDate', label:'Actual', field:{type:'date'}, render:r=>fmtDate(r.actualDate)},
+    {key:'weatherFlag', label:'Weather', field:{type:'select', options:weatherOpts}, render:r=><span className={"badge "+slug(r.weatherFlag||'None')}>{r.weatherFlag||'None'}</span>},
+    {key:'freight', label:'Freight', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.freight)},
+    {key:'fuelSurcharge', label:'Fuel Surch.', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.fuelSurcharge)},
+    {key:'demurrage', label:'Demurrage', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.demurrage)},
+    {key:'handling', label:'Handling', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.handling)},
+    {key:'insurance', label:'Insurance', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.insurance)},
+    {key:'landed', label:'Landed Cost', numeric:true, render:r=>fmtMoney(Number(r.freight||0)+Number(r.fuelSurcharge||0)+Number(r.demurrage||0)+Number(r.handling||0)+Number(r.insurance||0))},
+  ];
+
+  const fuelCols = [
+    {key:'date', label:'Date', field:{type:'date', required:true}, render:r=>fmtDate(r.date)},
+    {key:'type', label:'Type', field:{type:'select', options:['Delivery','Consumption'], required:true}},
+    {key:'liters', label:'Liters', numeric:true, field:{type:'number', required:true}},
+    {key:'cost', label:'Cost', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.cost)},
+    {key:'notes', label:'Notes / Equipment', field:{}},
+  ];
+
+  const consumption = data.fuel.filter(f=>f.type==='Consumption');
+  const avgDaily = consumption.length ? consumption.reduce((s,f)=>s+Number(f.liters||0),0)/consumption.length : 0;
+  const daysOfFuel = avgDaily>0 ? Math.round((data.settings.fuelStockLiters||0)/avgDaily) : null;
+
+  const [fuelStockDraft, setFuelStockDraft] = useState(data.settings.fuelStockLiters);
+  const [fuelAlertDraft, setFuelAlertDraft] = useState(data.settings.fuelAlertDays);
+  useEffect(()=>{ setFuelStockDraft(data.settings.fuelStockLiters); },[data.settings.fuelStockLiters]);
+  useEffect(()=>{ setFuelAlertDraft(data.settings.fuelAlertDays); },[data.settings.fuelAlertDays]);
+
+  return (
+    <div>
+      <DataTable
+        title="Multi-Modal Shipment Tracking & Cost-Per-Shipment"
+        sub="Truck / barge / final-mile legs with landed-cost roll-up"
+        columns={cols}
+        rows={data.shipments}
+        addLabel="Shipment"
+        onSave={(rec, isNew)=> mutate('shipments', isNew ? 'insert' : 'update', rec)}
+        onDelete={(id)=> mutate('shipments', 'delete', id)}
+      />
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Fuel Sub-Ledger</div>
+            <div className="panel-sub">Current stock: <b>{(data.settings.fuelStockLiters||0).toLocaleString()} L</b> · Avg draw: {Math.round(avgDaily)} L/day · Est. runway: {daysOfFuel===null?'—':daysOfFuel+'d'}</div>
+          </div>
+        </div>
+        <div className="settings-row" style={{marginBottom:14}}>
+          <div className="field">
+            <label>Current Fuel Stock (L)</label>
+            <input type="number" value={fuelStockDraft}
+              onChange={e=>setFuelStockDraft(e.target.value)}
+              onBlur={()=>mutateSettings({...data.settings, fuelStockLiters:fuelStockDraft})}/>
+          </div>
+          <div className="field">
+            <label>Alert threshold (days)</label>
+            <input type="number" value={fuelAlertDraft}
+              onChange={e=>setFuelAlertDraft(e.target.value)}
+              onBlur={()=>mutateSettings({...data.settings, fuelAlertDays:fuelAlertDraft})}/>
+          </div>
+        </div>
+        <DataTable
+          title="Fuel Log"
+          columns={fuelCols}
+          rows={data.fuel}
+          addLabel="Entry"
+          onSave={(rec, isNew)=> mutate('fuel', isNew ? 'insert' : 'update', rec)}
+          onDelete={(id)=> mutate('fuel', 'delete', id)}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ---------- module: Workforce ---------- */
+function Workforce({data, mutate}){
+  const cols = [
+    {key:'name', label:'Worker', field:{required:true}},
+    {key:'trade', label:'Trade / Role', field:{required:true}},
+    {key:'rotationIn', label:'Rotation In', field:{type:'date', required:true}, render:r=>fmtDate(r.rotationIn)},
+    {key:'rotationOut', label:'Rotation Out', field:{type:'date', required:true}, render:r=>fmtDate(r.rotationOut)},
+    {key:'certName', label:'Certification', field:{}},
+    {key:'certExpiry', label:'Cert Expiry', field:{type:'date'}, render:r=>{
+      const soon = r.certExpiry && daysBetween(todayISO(), r.certExpiry) <= (data.settings.certAlertDays||30);
+      return <span style={{color: soon ? '#E8A38F':'inherit'}}>{fmtDate(r.certExpiry)}</span>;
+    }},
+    {key:'status', label:'Status', field:{type:'select', options:['On Site','Off Rotation'], required:true}, render:r=><span className={"badge "+slug(r.status)}>{r.status}</span>},
+  ];
+  const onSiteCount = data.workforce.filter(w=>w.status==='On Site').length;
+
+  return (
+    <DataTable
+      title="Workforce & Certification Registry (2-on/2-off)"
+      sub={`${onSiteCount} on site now · certs auto-flag if expiring within ${data.settings.certAlertDays||30} days`}
+      columns={cols}
+      rows={data.workforce}
+      addLabel="Worker"
+      onSave={(rec, isNew)=> mutate('workforce', isNew ? 'insert' : 'update', rec)}
+      onDelete={(id)=> mutate('workforce', 'delete', id)}
+    />
+  );
+}
+
+/* ---------- module: Cost & Schedule ---------- */
+function CostSchedule({data, mutate}){
+  const cols = [
+    {key:'name', label:'Activity', field:{required:true}},
+    {key:'costCode', label:'Cost Code', field:{required:true}},
+    {key:'budget', label:'Budget', numeric:true, field:{type:'number', required:true}, render:r=>fmtMoney(r.budget)},
+    {key:'committed', label:'Committed', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.committed)},
+    {key:'inTransit', label:'In Transit', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.inTransit)},
+    {key:'installed', label:'Installed/Earned', numeric:true, field:{type:'number'}, render:r=>fmtMoney(r.installed)},
+    {key:'variance', label:'Variance', numeric:true, render:r=>{
+      const spent = Number(r.committed||0)+Number(r.inTransit||0)+Number(r.installed||0);
+      const v = Number(r.budget||0)-spent;
+      return <span style={{color: v<0 ? '#E8A38F':'#8FCB9F'}}>{fmtMoney(v)}</span>;
+    }},
+    {key:'linkedShipmentId', label:'Linked Shipment', field:{type:'select', options: data.shipments.map(s=>s.materialName||s.id)},
+      render:r=>{
+        const s = data.shipments.find(sh=>sh.id===r.linkedShipmentId);
+        return s ? (s.materialName || 'Shipment') : '—';
+      }},
+  ];
+
+  // linkedShipmentId select needs id values, but human-readable labels
+  const shipmentLabels = {};
+  data.shipments.forEach(s => { shipmentLabels[s.id] = s.materialName || s.route || 'Shipment'; });
+  const colsWithProperSelect = cols.map(c => c.key==='linkedShipmentId' ? {
+    ...c,
+    field:{type:'select', options: data.shipments.map(s=>s.id), optionLabels: shipmentLabels},
+  } : c);
+
+  return (
+    <DataTable
+      title="Cost & Schedule Integration"
+      sub="Committed / in-transit / installed cost states per activity, linked to shipments"
+      columns={colsWithProperSelect}
+      rows={data.activities}
+      addLabel="Activity"
+      onSave={(rec, isNew)=> mutate('activities', isNew ? 'insert' : 'update', rec)}
+      onDelete={(id)=> mutate('activities', 'delete', id)}
+    />
+  );
+}
+
+/* ---------- module: Field Reporting ---------- */
+function FieldReporting({data, mutate}){
+  const cols = [
+    {key:'date', label:'Date', field:{type:'date', required:true}, render:r=>fmtDate(r.date)},
+    {key:'type', label:'Type', field:{type:'select', options:['Progress','Incident','Delivery','Safety'], required:true}},
+    {key:'description', label:'Description', field:{required:true}},
+    {key:'photoCount', label:'Photos', numeric:true, field:{type:'number'}},
+    {key:'syncStatus', label:'Sync', field:{type:'select', options:['Local Only','Synced'], required:true}, render:r=><span className={"badge "+slug(r.syncStatus)}>{r.syncStatus}</span>},
+  ];
+  const localOnly = data.fieldReports.filter(f=>f.syncStatus==='Local Only').length;
+
+  return (
+    <DataTable
+      title="Field Reports — Offline Data Entry"
+      sub={`${localOnly} entries queued locally, not yet synced. Safety/incident reports sync first when a connectivity window opens.`}
+      columns={cols}
+      rows={data.fieldReports}
+      addLabel="Field Report"
+      onSave={(rec, isNew)=> mutate('fieldReports', isNew ? 'insert' : 'update', rec)}
+      onDelete={(id)=> mutate('fieldReports', 'delete', id)}
+    />
+  );
+}
+
+/* ---------- module: Early Warning ---------- */
+function EarlyWarning({alerts, onNavigate}){
+  const critical = alerts.filter(a=>a.severity==='critical');
+  const warning = alerts.filter(a=>a.severity==='warning');
+  return (
+    <div>
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Critical ({critical.length})</div>
+            <div className="panel-sub">Immediate action likely required · click a flag to jump to its source module</div>
+          </div>
+        </div>
+        {critical.length===0 ? <div className="empty-state">No critical flags.</div> :
+          critical.map((a,i)=>(
+            <div className="alert-row clickable critical" key={i} onClick={()=>onNavigate(a.module || 'dashboard')}>
+              <div className="alert-icon">⛔</div>
+              <div>
+                <div className="alert-title">{a.title}</div>
+                <div className="alert-detail">{a.detail}</div>
+                <div className="alert-cascade">↳ {a.cascade}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Warning ({warning.length})</div>
+            <div className="panel-sub">Monitor closely · click a flag to jump to its source module</div>
+          </div>
+        </div>
+        {warning.length===0 ? <div className="empty-state">No warnings.</div> :
+          warning.map((a,i)=>(
+            <div className="alert-row clickable warning" key={i} onClick={()=>onNavigate(a.module || 'dashboard')}>
+              <div className="alert-icon">⚠</div>
+              <div>
+                <div className="alert-title">{a.title}</div>
+                <div className="alert-detail">{a.detail}</div>
+                <div className="alert-cascade">↳ {a.cascade}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ---------- shell ---------- */
+const TABS = [
+  {id:'dashboard', num:'—', label:'Dashboard'},
+  {id:'procurement', num:'2', label:'Procurement'},
+  {id:'transport', num:'3–4', label:'Transport & Cost'},
+  {id:'workforce', num:'5', label:'Workforce'},
+  {id:'costschedule', num:'6', label:'Cost & Schedule'},
+  {id:'earlywarning', num:'7', label:'Early Warning'},
+  {id:'field', num:'8', label:'Field Reports'},
+];
+
+function App(){
+  const {data, mutate, mutateSettings, syncedAt, saving, error, reload} = useStore();
+  const [tab, setTab] = useState('dashboard');
+
+  if(error && !data){
+    return (
+      <div style={{padding:40, color:'#F3ECDF', fontFamily:'Inter', maxWidth:560}}>
+        <div style={{fontFamily:'Oswald', fontSize:20, marginBottom:10, color:'#E8A38F'}}>Couldn't load from Supabase</div>
+        <div style={{color:'#A99A85', marginBottom:16, fontSize:14}}>{error}</div>
+        <div style={{color:'#A99A85', fontSize:13, marginBottom:16}}>
+          Double-check the SUPABASE_URL / SUPABASE_ANON_KEY constants near the top of the script,
+          and that the schema SQL has been run in your Supabase project.
+        </div>
+        <button className="btn" onClick={reload}>Retry</button>
+      </div>
+    );
+  }
+
+  if(!data){
+    return <div style={{padding:40, color:'#A99A85', fontFamily:'Inter'}}>Loading site data…</div>;
+  }
+
+  const alerts = computeAlerts(data);
+  const alerts_sorted = [...alerts].sort((a,b)=> (a.severity==='critical'?0:1) - (b.severity==='critical'?0:1));
+  const critCount = alerts.filter(a=>a.severity==='critical').length;
+  const warnCount = alerts.filter(a=>a.severity==='warning').length;
+
+  const titleMap = {
+    dashboard:['Executive Dashboard','Cross-module status, generated on each sync'],
+    procurement:['Procurement & Long-Lead-Time Materials','Lead-time-driven ordering and supplier tiering'],
+    transport:['Transportation & Logistics Cost Control','Multi-modal tracking, landed cost, fuel sub-ledger'],
+    workforce:['Workforce Management','2-on/2-off rotation, certifications, manning'],
+    costschedule:['Cost & Schedule Integration','Committed / in-transit / installed cost states'],
+    earlywarning:['Early Warning / Risk Alerts','Rule-based automated flags, ranked by severity'],
+    field:['Field Reporting','Offline-first daily entry, prioritized sync'],
+  };
+
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <div className="brand">
+          <div className="brand-mark"><span className="dot"></span>SITE PMIS</div>
+          <div className="brand-sub">Remote Mining Facility · PH</div>
+        </div>
+        <div className="nav">
+          {TABS.map(t=>(
+            <div key={t.id} className={"nav-item "+(tab===t.id?'active':'')} onClick={()=>setTab(t.id)}>
+              <span className="nav-num">{t.num}</span>
+              <span>{t.label}</span>
+              {t.id==='earlywarning' && alerts.length>0 && <span className="nav-badge">{alerts.length}</span>}
+            </div>
+          ))}
+        </div>
+        <div className="sidebar-foot">Backed by Supabase · shared across devices</div>
+      </div>
+
+      <div className="main">
+        <div className="topbar">
+          <div>
+            <div className="topbar-title">{titleMap[tab][0]}</div>
+            <div className="topbar-sub">{titleMap[tab][1]}</div>
+          </div>
+          <div className="pulse-strip">
+            {critCount>0 && <div className="pulse-chip critical"><span className="pulse-dot critical"></span>{critCount} critical</div>}
+            {warnCount>0 && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>{warnCount} warning</div>}
+            {alerts.length===0 && <div className="pulse-chip"><span className="pulse-dot ok"></span>nominal</div>}
+            {error && <div className="pulse-chip critical" title={error}>save error</div>}
+            <div className="sync-chip">{saving ? 'saving…' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'not synced')}</div>
+          </div>
+        </div>
+        <div className="content">
+          {tab==='dashboard' && <Dashboard data={data} alerts={alerts_sorted} onNavigate={setTab} />}
+          {tab==='procurement' && <Procurement data={data} mutate={mutate} />}
+          {tab==='transport' && <Transportation data={data} mutate={mutate} mutateSettings={mutateSettings} />}
+          {tab==='workforce' && <Workforce data={data} mutate={mutate} />}
+          {tab==='costschedule' && <CostSchedule data={data} mutate={mutate} />}
+          {tab==='earlywarning' && <EarlyWarning alerts={alerts_sorted} onNavigate={setTab} />}
+          {tab==='field' && <FieldReporting data={data} mutate={mutate} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
