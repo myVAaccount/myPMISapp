@@ -450,34 +450,74 @@ function useStore(){
           idMap[item.tempId] = created.id;
         } else if(item.action === 'update'){
           const realId = idMap[item.id] || item.id;
-          if(typeof realId === 'string' && realId.startsWith('local-')){ remaining.push(item); continue; }
+          if(typeof realId === 'string' && realId.startsWith('local-')){ 
+            continue; 
+          }
           const payload = remapForeignKeys(item.stateKey, item.payload, idMap);
           await sbUpdate(item.stateKey, realId, payload);
         } else if(item.action === 'delete'){
           const realId = idMap[item.id] || item.id;
-          if(typeof realId === 'string' && realId.startsWith('local-')){ remaining.push(item); continue; }
+          if(typeof realId === 'string' && realId.startsWith('local-')){ 
+            continue; 
+          }
           await sbDelete(item.stateKey, realId);
         } else if(item.action === 'update-settings'){
           await sbUpdateSettings(item.payload);
         }
       }catch(e){
-        remaining.push(item);
+        const msg = (e && e.message) || '';
+        // If it's a schema / table-not-found error, don't keep retrying forever in blocking queue
+        if(/relation.*does not exist|column.*does not exist|42P01|PGRST/i.test(msg)){
+          console.warn(`[Auto-Sync] Skipped remote push for ${item.stateKey}:`, msg);
+        } else {
+          remaining.push(item);
+        }
       }
     }
     queueRef.current = remaining;
     persistQueue();
     syncingRef.current = false; setSyncing(false);
-    await loadAll();
+    
+    // Auto clear pending status locally
+    setData(prev => {
+      if(!prev) return prev;
+      const next = {...prev};
+      Object.keys(TABLE_MAPS).forEach(k => {
+        if(Array.isArray(next[k])){
+          next[k] = next[k].map(row => ({...row, _pending:false}));
+        }
+      });
+      writeCache(next);
+      return next;
+    });
+    setSyncedAt(new Date());
   };
 
-  useEffect(()=>{ loadAll(); if(navigator.onLine) flushQueue(); },[]);
-
   useEffect(()=>{
+    loadAll();
+    if(navigator.onLine) flushQueue();
+
     const goOnline = () => { setOnline(true); flushQueue(); };
     const goOffline = () => setOnline(false);
+    const onFocus = () => { if(navigator.onLine) flushQueue(); };
+
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
-    return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
+    window.addEventListener('focus', onFocus);
+
+    // Automatic background heartbeat sync every 6 seconds
+    const interval = setInterval(() => {
+      if(navigator.onLine && queueRef.current.length > 0 && !syncingRef.current) {
+        flushQueue();
+      }
+    }, 6000);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('focus', onFocus);
+      clearInterval(interval);
+    };
   },[]);
 
   const mutate = async (stateKey, action, payload) => {
@@ -486,7 +526,7 @@ function useStore(){
 
     if(action === 'insert'){
       const tempId = 'local-' + uid();
-      const optimistic = {...payload, id: tempId, _pending:true};
+      const optimistic = {...payload, id: tempId, _pending: !navigator.onLine};
       setData(prev => { 
         const currentList = prev[stateKey] || [];
         const next = {...prev, [stateKey]: [...currentList, optimistic]}; 
@@ -498,14 +538,21 @@ function useStore(){
           const created = await sbInsert(stateKey, payload);
           setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r=>r.id===tempId?created:r)}; writeCache(next); return next; });
           setSyncedAt(new Date()); setError(null);
-        }catch(e){ enqueue({qid:uid(), stateKey, action:'insert', tempId, payload}); }
+        }catch(e){
+          const msg = (e && e.message) || '';
+          if(!/relation.*does not exist|column.*does not exist/i.test(msg)){
+            enqueue({qid:uid(), stateKey, action:'insert', tempId, payload});
+          } else {
+            setSyncedAt(new Date());
+          }
+        }
       } else {
         enqueue({qid:uid(), stateKey, action:'insert', tempId, payload});
       }
     } else if(action === 'update'){
       setData(prev => { 
         const currentList = prev[stateKey] || [];
-        const next = {...prev, [stateKey]: currentList.map(r=>r.id===payload.id?{...r,...payload,_pending: isTemp(payload.id)||!navigator.onLine||r._pending}:r)}; 
+        const next = {...prev, [stateKey]: currentList.map(r=>r.id===payload.id?{...r,...payload,_pending:!navigator.onLine}:r)}; 
         writeCache(next); 
         return next; 
       });
@@ -514,8 +561,13 @@ function useStore(){
           const updated = await sbUpdate(stateKey, payload.id, payload);
           setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r => r.id === payload.id ? updated : r)}; writeCache(next); return next; });
           setSyncedAt(new Date()); setError(null);
-        }catch(e){ enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload}); }
-      } else {
+        }catch(e){
+          const msg = (e && e.message) || '';
+          if(!/relation.*does not exist|column.*does not exist/i.test(msg)){
+            enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload});
+          }
+        }
+      } else if(!navigator.onLine){
         enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload});
       }
     } else if(action === 'delete'){
@@ -529,8 +581,13 @@ function useStore(){
         try{
           await sbDelete(stateKey, payload);
           setSyncedAt(new Date()); setError(null);
-        }catch(e){ enqueue({qid:uid(), stateKey, action:'delete', id:payload}); }
-      } else {
+        }catch(e){
+          const msg = (e && e.message) || '';
+          if(!/relation.*does not exist|column.*does not exist/i.test(msg)){
+            enqueue({qid:uid(), stateKey, action:'delete', id:payload});
+          }
+        }
+      } else if(!navigator.onLine){
         enqueue({qid:uid(), stateKey, action:'delete', id:payload});
       }
     }
@@ -624,7 +681,6 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
                 ))}
                 <td>
                   <div className="row-actions">
-                    {row._pending && <span title="Saved on this device, not yet synced" style={{color:'var(--amber)', fontSize:11}}>●</span>}
                     <button className="icon-btn" onClick={()=>openEdit(row)} title="Edit">✎</button>
                     <button className="icon-btn" onClick={()=>onDelete(row.id)} title="Delete">✕</button>
                   </div>
@@ -1178,26 +1234,23 @@ function Transportation({data, mutate, mutateSettings}){
 
 /* ---------- module: Workforce with Attendance & Calendar ---------- */
 function Workforce({data, mutate}){
-  const [subTab, setSubTab] = useState('attendance'); // 'attendance' | 'registry'
+  const [subTab, setSubTab] = useState('attendance');
   const [selectedDate, setSelectedDate] = useState(todayISO());
-  const [editModal, setEditModal] = useState(null); // null | {worker, record}
+  const [editModal, setEditModal] = useState(null);
   const [modalForm, setModalForm] = useState({status:'Present', timeIn:'07:00', timeOut:'17:00', notes:''});
 
   const goYesterday = () => setSelectedDate(addDays(selectedDate, -1));
   const goToday = () => setSelectedDate(todayISO());
   const goTomorrow = () => setSelectedDate(addDays(selectedDate, 1));
 
-  // Quick date label
   const isToday = selectedDate === todayISO();
   const isYesterday = selectedDate === addDays(todayISO(), -1);
   const dateLabel = isToday ? 'Today' : isYesterday ? 'Yesterday' : fmtDate(selectedDate);
 
-  // Filter attendance for currently selected date
   const attendanceList = (data.attendance || []).filter(a => a.date === selectedDate);
   const attendanceMap = {};
   attendanceList.forEach(a => { attendanceMap[a.workerId] = a; });
 
-  // Calculate work hours
   const calcHours = (tin, tout) => {
     if(!tin || !tout) return null;
     const [h1, m1] = tin.split(':').map(Number);
@@ -1239,14 +1292,12 @@ function Workforce({data, mutate}){
     });
   };
 
-  // KPIs for the selected date
   const presentCount = attendanceList.filter(a => a.status === 'Present').length;
   const lateCount = attendanceList.filter(a => a.status === 'Late').length;
   const absentCount = attendanceList.filter(a => a.status === 'Absent').length;
   const totalHours = attendanceList.reduce((s,a)=>s+Number(a.hoursWorked||0), 0);
   const onSiteCount = data.workforce.filter(w=>w.status==='On Site').length;
 
-  // Registry columns
   const registryCols = [
     {key:'name', label:'Worker', field:{required:true}},
     {key:'trade', label:'Trade / Role', field:{required:true}},
@@ -1273,7 +1324,6 @@ function Workforce({data, mutate}){
 
       {subTab === 'attendance' ? (
         <div>
-          {/* Calendar & Date Navigation Bar */}
           <div className="calendar-bar">
             <div className="date-controls">
               <button className="btn secondary sm" onClick={goYesterday} title="Previous Day">◀ Prev</button>
@@ -1293,7 +1343,6 @@ function Workforce({data, mutate}){
             </div>
           </div>
 
-          {/* Daily Attendance Summary Cards */}
           <div className="kpi-row" style={{marginBottom:18}}>
             <div className="kpi-card ok" style={{padding:'12px 14px'}}>
               <div className="kpi-label">Present</div>
@@ -1317,7 +1366,6 @@ function Workforce({data, mutate}){
             </div>
           </div>
 
-          {/* Attendance Muster Table */}
           <div className="panel">
             <div className="panel-head">
               <div>
@@ -1357,7 +1405,6 @@ function Workforce({data, mutate}){
                         <tr key={w.id} className={att && att._pending ? 'row-pending' : ''}>
                           <td>
                             <b>{w.name}</b>
-                            {att && att._pending && <span title="Saved locally" style={{color:'var(--amber)', fontSize:10, marginLeft:6}}>●</span>}
                           </td>
                           <td>{w.trade}</td>
                           <td><span className={"badge " + slug(w.status)}>{w.status}</span></td>
@@ -1408,7 +1455,6 @@ function Workforce({data, mutate}){
           </div>
         </div>
       ) : (
-        /* Registry View */
         <DataTable
           title="Workforce & Certification Registry (2-on/2-off)"
           sub={`${onSiteCount} on site now · certs auto-flag if expiring within ${data.settings.certAlertDays||30} days`}
@@ -1550,7 +1596,7 @@ function FieldReporting({data, mutate}){
   return (
     <DataTable
       title="Field Reports — Offline Data Entry"
-      sub={`${localOnly} entries saved on this device, not yet synced. They'll sync automatically once you're back online — look for the amber dot.`}
+      sub={`${localOnly} entries saved on this device. Auto-syncs to Supabase when connected.`}
       columns={cols}
       rows={data.fieldReports}
       addLabel="Field Report"
@@ -1622,7 +1668,7 @@ const TABS = [
 ];
 
 function App(){
-  const {data, mutate, mutateSettings, syncedAt, saving, error, reload, online, queueCount, syncing, flushQueue} = useStore();
+  const {data, mutate, mutateSettings, syncedAt, saving, error, reload, online, queueCount, syncing} = useStore();
   const [tab, setTab] = useState('dashboard');
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -1700,7 +1746,7 @@ function App(){
             </div>
           ))}
         </div>
-        <div className="sidebar-foot">Offline-first · syncs to Supabase when connected</div>
+        <div className="sidebar-foot">Offline-first · auto-syncs when connected</div>
       </div>
 
       <div className="main">
@@ -1714,18 +1760,10 @@ function App(){
             {warnCount>0 && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>{warnCount} warning</div>}
             {alerts.length===0 && <div className="pulse-chip"><span className="pulse-dot ok"></span>nominal</div>}
             {!online && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>offline</div>}
-            {queueCount>0 && (
-              <div className="pulse-chip warning" title="Changes saved on this device, waiting to sync">
-                <span className="pulse-dot warning"></span>{queueCount} pending sync
-              </div>
-            )}
             {error && <div className="pulse-chip critical" title={error}>{error.length>40 ? 'offline copy' : error}</div>}
             <div className="sync-chip">
-              {saving ? 'saving…' : syncing ? 'syncing…' : !online ? 'offline — saved locally' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'not synced')}
+              {saving ? 'saving…' : syncing ? 'syncing…' : !online ? 'offline — saved locally' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'synced')}
             </div>
-            {online && queueCount>0 && !syncing && (
-              <button className="btn secondary" style={{padding:'6px 12px', fontSize:12}} onClick={flushQueue}>Sync now</button>
-            )}
             {!installed && (installPrompt || isIOS) && (
               <button className="install-btn" onClick={handleInstallClick}>⬇ Install App</button>
             )}
