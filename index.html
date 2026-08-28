@@ -137,6 +137,7 @@
   }
   td{padding:9px 10px;border-bottom:1px solid #2A241C;vertical-align:middle;}
   tr:hover td{background:var(--surface2);}
+  tr.row-pending td{background:rgba(232,135,30,0.06);}
   .num{font-family:var(--mono);}
   .row-actions{display:flex;gap:6px;}
   .icon-btn{
@@ -342,11 +343,34 @@ async function sbUpdateSettings(settings){
   if(error) throw error;
 }
 
+const CACHE_KEY = 'pmis_cache_v1';
+const QUEUE_KEY = 'pmis_queue_v1';
+const readCache = () => { try{ const raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } };
+const writeCache = (d) => { try{ localStorage.setItem(CACHE_KEY, JSON.stringify(d)); }catch(e){} };
+const readQueueStorage = () => { try{ const raw = localStorage.getItem(QUEUE_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } };
+const writeQueueStorage = (q) => { try{ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }catch(e){} };
+
+// Only field currently referencing another table's row: activities.linkedShipmentId -> shipments.id
+const remapForeignKeys = (stateKey, payload, idMap) => {
+  if(stateKey === 'activities' && payload.linkedShipmentId && idMap[payload.linkedShipmentId]){
+    return {...payload, linkedShipmentId: idMap[payload.linkedShipmentId]};
+  }
+  return payload;
+};
+
 function useStore(){
   const [data,setData] = useState(null);
   const [syncedAt,setSyncedAt] = useState(null);
   const [saving,setSaving] = useState(false);
   const [error,setError] = useState(null);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [queueCount, setQueueCount] = useState(readQueueStorage().length);
+  const [syncing, setSyncing] = useState(false);
+  const queueRef = useRef(readQueueStorage());
+  const syncingRef = useRef(false);
+
+  const persistQueue = () => { writeQueueStorage(queueRef.current); setQueueCount(queueRef.current.length); };
+  const enqueue = (item) => { queueRef.current = [...queueRef.current, item]; persistQueue(); };
 
   const loadAll = async () => {
     try{
@@ -354,52 +378,122 @@ function useStore(){
         sbFetchAll('materials'), sbFetchAll('suppliers'), sbFetchAll('shipments'), sbFetchAll('fuel'),
         sbFetchAll('workforce'), sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
       ]);
-      setData({materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings});
+      const next = {materials, suppliers, shipments, fuel, workforce, activities, fieldReports, settings};
+      setData(next);
+      writeCache(next);
       setSyncedAt(new Date());
       setError(null);
     }catch(e){
-      setError((e && e.message) || 'Could not reach Supabase. Check the URL/key and that the schema has been run.');
+      const cached = readCache();
+      if(cached){
+        setData(cached);
+        setError(navigator.onLine ? ((e && e.message) || 'Could not reach Supabase — showing last saved data.') : null);
+      } else {
+        setError((e && e.message) || 'Could not reach Supabase, and no offline copy is saved on this device yet. Connect once to load data before going offline.');
+      }
     }
   };
 
-  useEffect(()=>{ loadAll(); },[]);
+  const flushQueue = async () => {
+    if(syncingRef.current || !navigator.onLine || queueRef.current.length === 0) return;
+    syncingRef.current = true; setSyncing(true);
+    const idMap = {};
+    const remaining = [];
+    for(const item of queueRef.current){
+      try{
+        if(item.action === 'insert'){
+          const payload = remapForeignKeys(item.stateKey, item.payload, idMap);
+          const created = await sbInsert(item.stateKey, payload);
+          idMap[item.tempId] = created.id;
+        } else if(item.action === 'update'){
+          const realId = idMap[item.id] || item.id;
+          if(typeof realId === 'string' && realId.startsWith('local-')){ remaining.push(item); continue; }
+          const payload = remapForeignKeys(item.stateKey, item.payload, idMap);
+          await sbUpdate(item.stateKey, realId, payload);
+        } else if(item.action === 'delete'){
+          const realId = idMap[item.id] || item.id;
+          if(typeof realId === 'string' && realId.startsWith('local-')){ remaining.push(item); continue; }
+          await sbDelete(item.stateKey, realId);
+        } else if(item.action === 'update-settings'){
+          await sbUpdateSettings(item.payload);
+        }
+      }catch(e){
+        remaining.push(item);
+      }
+    }
+    queueRef.current = remaining;
+    persistQueue();
+    syncingRef.current = false; setSyncing(false);
+    await loadAll();
+  };
 
-  // mutate('materials','insert'|'update'|'delete', payload)
+  useEffect(()=>{ loadAll(); if(navigator.onLine) flushQueue(); },[]);
+
+  useEffect(()=>{
+    const goOnline = () => { setOnline(true); flushQueue(); };
+    const goOffline = () => setOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
+  },[]);
+
+  // mutate('materials','insert'|'update'|'delete', payload) — always applies optimistically & locally first,
+  // then tries the network; anything that fails or is offline gets queued and retried on reconnect.
   const mutate = async (stateKey, action, payload) => {
     setSaving(true);
-    try{
-      if(action === 'insert'){
-        const created = await sbInsert(stateKey, payload);
-        setData(prev => ({...prev, [stateKey]: [...prev[stateKey], created]}));
-      } else if(action === 'update'){
-        const updated = await sbUpdate(stateKey, payload.id, payload);
-        setData(prev => ({...prev, [stateKey]: prev[stateKey].map(r => r.id === payload.id ? updated : r)}));
-      } else if(action === 'delete'){
-        await sbDelete(stateKey, payload);
-        setData(prev => ({...prev, [stateKey]: prev[stateKey].filter(r => r.id !== payload)}));
+    const isTemp = (id) => typeof id === 'string' && id.startsWith('local-');
+
+    if(action === 'insert'){
+      const tempId = 'local-' + uid();
+      const optimistic = {...payload, id: tempId, _pending:true};
+      setData(prev => { const next = {...prev, [stateKey]: [...prev[stateKey], optimistic]}; writeCache(next); return next; });
+      if(navigator.onLine){
+        try{
+          const created = await sbInsert(stateKey, payload);
+          setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r=>r.id===tempId?created:r)}; writeCache(next); return next; });
+          setSyncedAt(new Date()); setError(null);
+        }catch(e){ enqueue({qid:uid(), stateKey, action:'insert', tempId, payload}); }
+      } else {
+        enqueue({qid:uid(), stateKey, action:'insert', tempId, payload});
       }
-      setSyncedAt(new Date());
-      setError(null);
-    }catch(e){
-      setError((e && e.message) || 'Save failed.');
+    } else if(action === 'update'){
+      setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r=>r.id===payload.id?{...r,...payload,_pending: isTemp(payload.id)||!navigator.onLine||r._pending}:r)}; writeCache(next); return next; });
+      if(navigator.onLine && !isTemp(payload.id)){
+        try{
+          const updated = await sbUpdate(stateKey, payload.id, payload);
+          setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].map(r => r.id === payload.id ? updated : r)}; writeCache(next); return next; });
+          setSyncedAt(new Date()); setError(null);
+        }catch(e){ enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload}); }
+      } else {
+        enqueue({qid:uid(), stateKey, action:'update', id:payload.id, payload});
+      }
+    } else if(action === 'delete'){
+      setData(prev => { const next = {...prev, [stateKey]: prev[stateKey].filter(r => r.id !== payload)}; writeCache(next); return next; });
+      if(navigator.onLine && !isTemp(payload)){
+        try{
+          await sbDelete(stateKey, payload);
+          setSyncedAt(new Date()); setError(null);
+        }catch(e){ enqueue({qid:uid(), stateKey, action:'delete', id:payload}); }
+      } else {
+        enqueue({qid:uid(), stateKey, action:'delete', id:payload});
+      }
     }
     setSaving(false);
   };
 
   const mutateSettings = async (nextSettings) => {
-    setSaving(true);
-    try{
-      await sbUpdateSettings(nextSettings);
-      setData(prev => ({...prev, settings: nextSettings}));
-      setSyncedAt(new Date());
-      setError(null);
-    }catch(e){
-      setError((e && e.message) || 'Save failed.');
+    setData(prev => { const next = {...prev, settings: nextSettings}; writeCache(next); return next; });
+    if(navigator.onLine){
+      try{
+        await sbUpdateSettings(nextSettings);
+        setSyncedAt(new Date()); setError(null);
+      }catch(e){ enqueue({qid:uid(), stateKey:'settings', action:'update-settings', payload:nextSettings}); }
+    } else {
+      enqueue({qid:uid(), stateKey:'settings', action:'update-settings', payload:nextSettings});
     }
-    setSaving(false);
   };
 
-  return {data, mutate, mutateSettings, syncedAt, saving, error, reload:loadAll};
+  return {data, mutate, mutateSettings, syncedAt, saving, error, reload:loadAll, online, queueCount, syncing, flushQueue};
 }
 
 /* ---------- generic CRUD table ---------- */
@@ -466,7 +560,7 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
           </tr></thead>
           <tbody>
             {rows.map(row => (
-              <tr key={row.id}>
+              <tr key={row.id} className={row._pending ? 'row-pending' : ''}>
                 {columns.map(c => (
                   <td key={c.key} className={c.numeric ? 'num' : ''}>
                     {c.render ? c.render(row) : row[c.key]}
@@ -474,6 +568,7 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
                 ))}
                 <td>
                   <div className="row-actions">
+                    {row._pending && <span title="Saved on this device, not yet synced" style={{color:'var(--amber)', fontSize:11}}>●</span>}
                     <button className="icon-btn" onClick={()=>openEdit(row)} title="Edit">✎</button>
                     <button className="icon-btn" onClick={()=>onDelete(row.id)} title="Delete">✕</button>
                   </div>
@@ -1098,7 +1193,7 @@ const TABS = [
 ];
 
 function App(){
-  const {data, mutate, mutateSettings, syncedAt, saving, error, reload} = useStore();
+  const {data, mutate, mutateSettings, syncedAt, saving, error, reload, online, queueCount, syncing, flushQueue} = useStore();
   const [tab, setTab] = useState('dashboard');
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -1176,7 +1271,7 @@ function App(){
             </div>
           ))}
         </div>
-        <div className="sidebar-foot">Backed by Supabase · shared across devices</div>
+        <div className="sidebar-foot">Offline-first · syncs to Supabase when connected</div>
       </div>
 
       <div className="main">
@@ -1189,8 +1284,19 @@ function App(){
             {critCount>0 && <div className="pulse-chip critical"><span className="pulse-dot critical"></span>{critCount} critical</div>}
             {warnCount>0 && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>{warnCount} warning</div>}
             {alerts.length===0 && <div className="pulse-chip"><span className="pulse-dot ok"></span>nominal</div>}
-            {error && <div className="pulse-chip critical" title={error}>save error</div>}
-            <div className="sync-chip">{saving ? 'saving…' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'not synced')}</div>
+            {!online && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>offline</div>}
+            {queueCount>0 && (
+              <div className="pulse-chip warning" title="Changes saved on this device, waiting to sync">
+                <span className="pulse-dot warning"></span>{queueCount} pending sync
+              </div>
+            )}
+            {error && <div className="pulse-chip critical" title={error}>{error.length>40 ? 'offline copy' : error}</div>}
+            <div className="sync-chip">
+              {saving ? 'saving…' : syncing ? 'syncing…' : !online ? 'offline — saved locally' : (syncedAt ? 'synced '+syncedAt.toLocaleTimeString() : 'not synced')}
+            </div>
+            {online && queueCount>0 && !syncing && (
+              <button className="btn secondary" style={{padding:'6px 12px', fontSize:12}} onClick={flushQueue}>Sync now</button>
+            )}
             {!installed && (installPrompt || isIOS) && (
               <button className="install-btn" onClick={handleInstallClick}>⬇ Install App</button>
             )}
