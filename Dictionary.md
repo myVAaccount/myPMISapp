@@ -110,3 +110,21 @@
 | **Type** | Category of report: `Progress`, `Incident`, `Delivery`, `Safety`. | `Progress` | Classifies observations for management review. |
 | **Description** | Daily notes, ground conditions, progress, or issues. | `Completed rebar tying for Crusher base.` | Captures real-time qualitative site data. |
 | **Photos** | Photos captured and uploaded from site. | `[Image 1, Image 2]` | Visual evidence of completed work or site hazards. |
+
+---
+
+## 8. 🛏️ Camp Bed Matrix (Workforce Sub-View & Anti-Hot-Bedding)
+
+| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
+| :--- | :--- | :--- | :--- |
+| **ROOM / BED ID** | Specific physical room and bunk/bed number in the site camp accommodation wing. | `MH-A-01` | Pinpoints physical bed location for room allocation. |
+| **CURRENT OCCUPANT** | The worker currently assigned to the bed, or marked `Vacant`. | `Juan Dela Cruz` / `Vacant` | Identifies who is physically sleeping in the bed. |
+| **SHIFT ROTATION STATUS** | Operational rotation milestone of the current resident. | `Shift Ending (Leaving Today)`, `Mid-Roster (Active)`, `Maintenance / Cleaning`, `Ready for Assignment` | Clarifies departure timing or preparation state. |
+| **VACATING DATE** | Date when the occupant is scheduled to leave site. Extended automatically by **+24h** if outbound convoys are delayed. | `Aug 29, 2026` / `+24h Ext` | Prevents unhousing outbound crew if roads are impassable. |
+| **NEXT RESERVED OCCUPANT** | Inbound worker scheduled to take over the bed upon turnover and cleaning. | `Mark Santos (In Transit)` | Coordinates room handover between outbound and inbound crew. |
+| **BED STATUS** | Real-time physical availability and turnover state. | `🔴 Occupied`, `🟡 Pending Handover`, `🔵 Housekeeping`, `🟢 Available` | Color-coded status preventing hot-bedding and uncleaned assignments. |
+| **Check-In Inbound** | Quick action connecting an incoming worker to the bed and setting status to `🔴 Occupied`. | Action Trigger | Streamlines arrival check-in. |
+| **Send to Housekeeping** | Quick action disconnecting a departed worker and setting status to `🔵 Housekeeping`. | Action Trigger | Ensures rooms are routed for sanitization before new arrivals enter. |
+| **Sanitation Cleared** | Quick action signing off cleaning inspection and flipping status to `🟢 Available`. | Action Trigger | Marks room clean and ready for immediate booking. |
+| **Road Delay Safety Extension** | Automated logic extending vacating date by +24 hours when outbound buses or transport trucks encounter muddy roads/weather. | `+24h Delay Ext` | Protects workers from being evicted while waiting for transit. |
+
