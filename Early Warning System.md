@@ -3,7 +3,7 @@
 
 ---
 
-## 🧭 Quick Summary of the 6 Early Warning Rules
+## 🧭 Quick Summary of the 7 Early Warning Rules
 
 | Warning Name | Module in App | Severity Level | When Does It Trigger? | Impact on the Project |
 | :--- | :--- | :--- | :--- | :--- |
@@ -13,6 +13,7 @@
 | **4. Expiring Certification** | 👥 Workforce | ⛔ **Critical** / ⚠ **Warning** | When a worker's safety or equipment license is expiring within **30 days** (Warning) or **7 days** (Critical). | Worker is legally disqualified from operating machinery or entering high-risk areas. |
 | **5. Low Fuel Stock** | ⛽ Transport & Cost | ⛔ **Critical** / ⚠ **Warning** | When remaining diesel in the site tanks is down to **7 days** (Warning) or **3 days** (Critical). | Site diesel generators and heavy equipment will run out of power. |
 | **6. Budget Cost Overrun** | 💰 Cost & Schedule | ⚠ **Warning** | When total money spent (**Committed + In Transit + Installed**) is higher than the approved **Budget**. | The activity is losing money and cutting into project contingency reserves. |
+| **7. Camp Bed Road Delay & Handover** | 👥 Workforce / Camp Beds | ⛔ **Critical** / ⚠ **Warning** | When outbound transport encounters weather/mud delays extending bed stay (+24h), or a bed has a same-day shift handover. | Outbound workers are stranded; inbound workers risk double-booking (hot-bedding) or uncleaned rooms. |
 
 ---
 
@@ -176,6 +177,34 @@
 #### ✅ What Action is Needed?
 1. Review contractor invoices to check for overcharging or unapproved extra work.
 2. Request a formal management budget approval or change order if the scope of work was expanded.
+
+---
+
+### Rule 7: Camp Bed Road Delay & Handover (Anti-Hot-Bedding Safety)
+
+#### 📱 Fields in the App Used for this Rule:
+* **Room / Bed ID**: Specific bunk identifier in the site camp (e.g., `MH-A-01`, `MH-B-02`).
+* **Current Occupant**: Name of the employee or contractor currently housed in the bed.
+* **Vacating Date**: The planned date when the worker is scheduled to leave site.
+* **Road Delay Safety Extension (`roadDelayExt` / +24h Ext)**: Safety flag activated when outbound transport convoys or flights are delayed by weather, landslides, or impassable roads.
+* **Next Reserved Occupant**: The inbound technician travelling to site scheduled to take over the bed upon handover.
+* **Bed Status**: Real-time room lifecycle state (*🔴 Occupied*, *🟡 Pending Handover*, *🔵 Housekeeping*, *🟢 Available*).
+
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red) — Road Delay Bed Extension**:
+  * Triggers when a bed has an active **Road Delay Safety Extension (+24h)**.
+  * **Plain Example**: Outbound convoy is halted due to heavy mud on the access road. Outbound occupant's stay is extended by +24 hours to prevent leaving them without a roof. Inbound worker is held in transit staging to prevent room double-booking ("hot-bedding").
+* **⚠ Warning (Amber) — Same-Day Bed Turnover**:
+  * Triggers when a bed status is **"Pending Handover"** and the **Vacating Date is Today**.
+  * **Plain Example**: Worker is vacating today; the system warns camp management that Housekeeping linen disinfection must be signed off before checking in the arriving worker.
+
+#### 💥 What Happens on Site?
+* Eliminates the risk of **hot-bedding** (assigning two workers to the same bed without sanitation).
+* Prevents evicting departing workers when outbound buses or boats cannot depart due to typhoons or road closures.
+
+#### ✅ What Action is Needed?
+1. **For Road Delay Alerts**: Keep the outbound worker safely housed in their assigned bed. Stage the incoming worker in transit staging or overflow bunks until the outbound convoy clears.
+2. **For Same-Day Handover**: As soon as the departing worker leaves, click **"Send to Housekeeping"** (🔵). Once cleaned and disinfected, click **"Sanitation Cleared"** (🟢) before using **"Check-In Inbound"** (🔴).
 
 ---
 
