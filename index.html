@@ -184,6 +184,32 @@
   .badge.absent{background:#3A1F1A;color:#E8A38F;border:1px solid rgba(232,163,143,0.3);}
   .badge.off{background:#2A2A2A;color:#B0A995;}
 
+  /* Camp Bed Matrix Badges & Styles */
+  .badge.bed-occupied{background:#3A1F1A;color:#E8A38F;border:1px solid rgba(232,163,143,0.3);font-weight:600;}
+  .badge.bed-pending{background:#3A2E1C;color:#E8C285;border:1px solid rgba(232,194,133,0.5);font-weight:600;animation:pulse-amber 2s infinite;}
+  .badge.bed-housekeeping{background:#1D2D3D;color:#9DBBE0;border:1px solid rgba(157,187,224,0.3);font-weight:600;}
+  .badge.bed-available{background:#233A2C;color:#8FCB9F;border:1px solid rgba(143,203,159,0.3);font-weight:600;}
+  .badge.delay-ext{background:#451A14;color:#FFA994;border:1px solid #C4432B;font-weight:600;font-size:10.5px;padding:2px 6px;margin-left:6px;border-radius:4px;}
+  @keyframes pulse-amber{0%{box-shadow:0 0 0 0 rgba(232,135,30,0.4);}70%{box-shadow:0 0 0 6px rgba(232,135,30,0);}100%{box-shadow:0 0 0 0 rgba(232,135,30,0);}}
+
+  .delay-banner{
+    background:linear-gradient(90deg, #2B1D16 0%, #221D17 100%);
+    border:1px solid #7A3D28;border-left:4px solid var(--rust);
+    border-radius:8px;padding:12px 16px;margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  }
+  .delay-banner-title{font-family:var(--disp);font-size:15px;font-weight:600;color:#F2C4B8;display:flex;align-items:center;gap:8px;}
+  .delay-banner-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+  .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .filter-chip{
+    padding:4px 10px;border-radius:14px;font-size:11.5px;font-family:var(--body);font-weight:500;
+    background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;
+    transition:all .15s;
+  }
+  .filter-chip:hover{color:var(--text);border-color:var(--text-dim);}
+  .filter-chip.active{background:var(--surface);border-color:var(--amber);color:var(--amber);}
+
   .alert-row{
     display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:7px;
     border:1px solid var(--border);margin-bottom:9px;background:var(--surface2);
@@ -320,6 +346,16 @@ const SUPABASE_URL = 'https://lsqphqributzwcffyhsv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzcXBocXJpYnV0endjZmZ5aHN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NzI1MjIsImV4cCI6MjEwMzQ0ODUyMn0.H82vmHBOTRwuegGdh6hnAf06LbxK-9LfwLSVoE7kUX8';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/* ---------- default seed data for camp bed matrix ---------- */
+const DEFAULT_CAMP_BEDS = [
+  { id: 'bed-01', roomId: 'MH-A', bedId: 'MH-A-01', currentOccupant: 'Juan Dela Cruz', shiftStatus: 'Shift Ending (Leaving Today)', vacatingDate: '2026-08-29', nextOccupant: 'Mark Santos (In Transit)', status: 'Pending Handover', roadDelayExt: false, notes: 'Outbound transport convoy scheduled 18:00' },
+  { id: 'bed-02', roomId: 'MH-A', bedId: 'MH-A-02', currentOccupant: 'Vacant', shiftStatus: 'Maintenance / Cleaning', vacatingDate: null, nextOccupant: 'Reynaldo Go (In Transit)', status: 'Housekeeping', roadDelayExt: false, notes: 'Linen change & sanitization in progress' },
+  { id: 'bed-03', roomId: 'MH-A', bedId: 'MH-A-03', currentOccupant: 'Arnel Pineda', shiftStatus: 'Mid-Roster (Active)', vacatingDate: '2026-09-12', nextOccupant: 'None', status: 'Occupied', roadDelayExt: false, notes: 'On-site night shift operator' },
+  { id: 'bed-04', roomId: 'MH-A', bedId: 'MH-A-04', currentOccupant: 'Vacant', shiftStatus: 'Ready for Assignment', vacatingDate: null, nextOccupant: 'None', status: 'Available', roadDelayExt: false, notes: 'Sanitized & inspected' },
+  { id: 'bed-05', roomId: 'MH-B', bedId: 'MH-B-01', currentOccupant: 'Danilo Ramos', shiftStatus: 'Mid-Roster (Active)', vacatingDate: '2026-09-18', nextOccupant: 'None', status: 'Occupied', roadDelayExt: false, notes: 'Excavator lead' },
+  { id: 'bed-06', roomId: 'MH-B', bedId: 'MH-B-02', currentOccupant: 'Vacant', shiftStatus: 'Ready for Assignment', vacatingDate: null, nextOccupant: 'None', status: 'Available', roadDelayExt: false, notes: 'Ready for check-in' },
+];
+
 /* ---------- table <-> app-state field maps ---------- */
 const TABLE_MAPS = {
   materials: {table:'materials', fields:{name:'name', supplier:'supplier', qty:'qty', unitCost:'unit_cost', supplierLeadDays:'supplier_lead_days', transportLeadDays:'transport_lead_days', bufferDays:'buffer_days', needBy:'need_by', status:'status'}},
@@ -328,6 +364,7 @@ const TABLE_MAPS = {
   fuel: {table:'fuel_log', fields:{date:'date', type:'type', liters:'liters', cost:'cost', notes:'notes'}},
   workforce: {table:'workforce', fields:{name:'name', trade:'trade', rotationIn:'rotation_in', rotationOut:'rotation_out', certName:'cert_name', certExpiry:'cert_expiry', status:'status'}},
   attendance: {table:'workforce_attendance', fields:{workerId:'worker_id', workerName:'worker_name', date:'date', status:'status', timeIn:'time_in', timeOut:'time_out', hoursWorked:'hours_worked', notes:'notes'}},
+  campBeds: {table:'camp_beds', fields:{roomId:'room_id', bedId:'bed_id', currentOccupant:'current_occupant', shiftStatus:'shift_status', vacatingDate:'vacating_date', nextOccupant:'next_occupant', status:'status', roadDelayExt:'road_delay_ext', notes:'notes'}},
   activities: {table:'activities', fields:{name:'name', costCode:'cost_code', budget:'budget', committed:'committed', inTransit:'in_transit', installed:'installed', linkedShipmentId:'linked_shipment_id'}},
   fieldReports: {table:'field_reports', fields:{date:'date', type:'type', description:'description', photoCount:'photo_count', photoUrls:'photo_urls'}},
 };
@@ -425,11 +462,23 @@ function useStore(){
 
   const loadAll = async () => {
     try{
-      const [materials, suppliers, shipments, fuel, workforce, attendance, activities, fieldReports, settings] = await Promise.all([
+      const [materials, suppliers, shipments, fuel, workforce, attendance, campBeds, activities, fieldReports, settings] = await Promise.all([
         sbFetchAll('materials'), sbFetchAll('suppliers'), sbFetchAll('shipments'), sbFetchAll('fuel'),
-        sbFetchAll('workforce'), sbFetchAll('attendance').catch(()=>[]), sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
+        sbFetchAll('workforce'), sbFetchAll('attendance').catch(()=>[]), sbFetchAll('campBeds').catch(()=>[]),
+        sbFetchAll('activities'), sbFetchAll('fieldReports'), sbFetchSettings(),
       ]);
-      const next = {materials, suppliers, shipments, fuel, workforce, attendance: attendance||[], activities, fieldReports, settings};
+      const next = {
+        materials,
+        suppliers,
+        shipments,
+        fuel,
+        workforce,
+        attendance: attendance||[],
+        campBeds: (campBeds && campBeds.length>0 ? campBeds : DEFAULT_CAMP_BEDS),
+        activities,
+        fieldReports,
+        settings
+      };
       setData(next);
       writeCache(next);
       setSyncedAt(new Date());
@@ -438,6 +487,7 @@ function useStore(){
       const cached = readCache();
       if(cached){
         if(!cached.attendance) cached.attendance = [];
+        if(!cached.campBeds || cached.campBeds.length === 0) cached.campBeds = DEFAULT_CAMP_BEDS;
         setData(cached);
         setError(navigator.onLine ? ((e && e.message) || 'Could not reach Supabase — showing last saved data.') : null);
       } else {
@@ -865,6 +915,27 @@ function computeAlerts(data){
     }
   });
 
+  // Camp Bed Matrix — Hot-Bedding & Road Delay Safety Flags
+  (data.campBeds || []).forEach(b => {
+    if(b.roadDelayExt){
+      alerts.push({
+        severity:'critical',
+        module:'workforce',
+        title:`Road Delay Bed Extension — ${b.bedId}`,
+        detail:`${b.currentOccupant} vacating date extended +24h to ${fmtDate(b.vacatingDate)} due to convoy weather/mud delay.`,
+        cascade: b.nextOccupant && b.nextOccupant !== 'None' ? `Inbound occupant (${b.nextOccupant}) held in transit staging to prevent hot-bedding conflict.` : 'Bed locked until outbound transport departs.',
+      });
+    } else if(b.status === 'Pending Handover' && b.vacatingDate === today){
+      alerts.push({
+        severity:'warning',
+        module:'workforce',
+        title:`Same-Day Bed Turnover — ${b.bedId}`,
+        detail:`${b.currentOccupant} vacating today (${fmtDate(b.vacatingDate)}); incoming: ${b.nextOccupant}.`,
+        cascade:'Outgoing departure must clear Housekeeping before incoming check-in.',
+      });
+    }
+  });
+
   return alerts;
 }
 
@@ -1238,7 +1309,669 @@ function Transportation({data, mutate, mutateSettings}){
   );
 }
 
-/* ---------- module: Workforce with Attendance & Calendar ---------- */
+/* ---------- module: Camp Bed Matrix (Workforce Sub-View) ---------- */
+function CampBedMatrix({data, mutate}){
+  const beds = (data.campBeds && data.campBeds.length > 0) ? data.campBeds : DEFAULT_CAMP_BEDS;
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [quickModal, setQuickModal] = useState(null);
+  const [quickForm, setQuickForm] = useState({
+    bedId: '',
+    roomId: 'MH-A',
+    currentOccupant: '',
+    shiftStatus: 'Mid-Roster (Active)',
+    vacatingDate: '',
+    nextOccupant: 'None',
+    status: 'Occupied',
+    notes: '',
+    actionType: 'checkin',
+    selectedBedId: ''
+  });
+  const [safetyBannerMsg, setSafetyBannerMsg] = useState(null);
+
+  const occupiedCount = beds.filter(b => b.status === 'Occupied').length;
+  const pendingCount = beds.filter(b => b.status === 'Pending Handover').length;
+  const housekeepingCount = beds.filter(b => b.status === 'Housekeeping').length;
+  const availableCount = beds.filter(b => b.status === 'Available').length;
+  const delayedCount = beds.filter(b => b.roadDelayExt).length;
+
+  // Road Delay Safety Extension (+24h for all outbound/pending workers)
+  const handleTriggerGlobalRoadDelay = () => {
+    let affectedNames = [];
+    beds.forEach(b => {
+      const isOutbound = b.status === 'Pending Handover' || (b.shiftStatus && b.shiftStatus.includes('Leaving Today')) || (b.vacatingDate && b.vacatingDate <= todayISO());
+      if(isOutbound){
+        const currentVacating = b.vacatingDate || todayISO();
+        const nextVacating = addDays(currentVacating, 1);
+        affectedNames.push(b.currentOccupant || b.bedId);
+        mutate('campBeds', 'update', {
+          ...b,
+          vacatingDate: nextVacating,
+          shiftStatus: 'Shift Ending (Extended +24h — Convoy Delayed)',
+          roadDelayExt: true,
+          notes: (b.notes ? b.notes + ' | ' : '') + 'Transport convoy delayed by muddy roads; +24h safety extension applied'
+        });
+      }
+    });
+    setSafetyBannerMsg(`🛡️ ROAD DELAY SAFETY TRIGGERED: Outbound transport delayed by muddy roads/weather. Extended vacating date by +24h for ${affectedNames.join(', ') || 'outgoing crew'} to prevent unhousing. Inbound workers held in transit staging.`);
+  };
+
+  const handleClearGlobalRoadDelay = () => {
+    beds.forEach(b => {
+      if(b.roadDelayExt){
+        mutate('campBeds', 'update', {
+          ...b,
+          shiftStatus: b.currentOccupant && b.currentOccupant !== 'Vacant' ? 'Mid-Roster (Active)' : 'Ready for Assignment',
+          roadDelayExt: false
+        });
+      }
+    });
+    setSafetyBannerMsg(null);
+  };
+
+  const handleExtendSingleBed = (bed) => {
+    const currentVacating = bed.vacatingDate || todayISO();
+    const nextVacating = addDays(currentVacating, 1);
+    mutate('campBeds', 'update', {
+      ...bed,
+      vacatingDate: nextVacating,
+      shiftStatus: 'Shift Ending (Extended +24h — Convoy Delayed)',
+      roadDelayExt: true,
+      notes: (bed.notes ? bed.notes + ' | ' : '') + 'Outbound bus delayed; +24h bed safety extension applied'
+    });
+    setSafetyBannerMsg(`🛡️ Bed ${bed.bedId} (${bed.currentOccupant}) extended by +24h to ${fmtDate(nextVacating)} due to road delay.`);
+  };
+
+  // Quick Action 1: Check-In Inbound (🔴 Occupied)
+  const executeCheckIn = (bed, incomingWorker, vacatingDate) => {
+    const defaultWorker = bed.nextOccupant && bed.nextOccupant !== 'None' 
+      ? bed.nextOccupant.replace(/\s*\(In Transit\)/i, '') 
+      : 'Inbound Technician';
+    const worker = incomingWorker || defaultWorker;
+    const vacating = vacatingDate || addDays(todayISO(), 14);
+    mutate('campBeds', 'update', {
+      ...bed,
+      currentOccupant: worker,
+      shiftStatus: 'Mid-Roster (Active)',
+      vacatingDate: vacating,
+      nextOccupant: 'None',
+      status: 'Occupied',
+      roadDelayExt: false,
+      notes: (bed.notes ? bed.notes + ' | ' : '') + `Checked in on ${fmtDate(todayISO())}`
+    });
+  };
+
+  // Quick Action 2: Send to Housekeeping (🔵 Housekeeping)
+  const executeSendToHousekeeping = (bed) => {
+    mutate('campBeds', 'update', {
+      ...bed,
+      currentOccupant: 'Vacant',
+      shiftStatus: 'Maintenance / Cleaning',
+      vacatingDate: null,
+      status: 'Housekeeping',
+      roadDelayExt: false,
+      notes: 'Departed site; queued for linen change & sanitation'
+    });
+  };
+
+  // Quick Action 3: Sanitation Cleared (🟢 Available)
+  const executeSanitationCleared = (bed) => {
+    mutate('campBeds', 'update', {
+      ...bed,
+      currentOccupant: 'Vacant',
+      shiftStatus: 'Ready for Assignment',
+      vacatingDate: null,
+      status: 'Available',
+      roadDelayExt: false,
+      notes: 'Sanitized & inspected — ready for check-in'
+    });
+  };
+
+  // Open Quick Entry Modal
+  const openQuickEntryModal = (bed = null, defaultAction = 'checkin') => {
+    const targetBed = bed || beds[0] || {};
+    setQuickModal({ bed: targetBed, isNew: !bed });
+    setQuickForm({
+      bedId: targetBed.bedId || '',
+      roomId: targetBed.roomId || 'MH-A',
+      currentOccupant: targetBed.nextOccupant && targetBed.nextOccupant !== 'None' 
+        ? targetBed.nextOccupant.replace(/\s*\(In Transit\)/i, '') 
+        : (targetBed.currentOccupant === 'Vacant' ? '' : targetBed.currentOccupant || ''),
+      shiftStatus: targetBed.shiftStatus || 'Mid-Roster (Active)',
+      vacatingDate: targetBed.vacatingDate || addDays(todayISO(), 14),
+      nextOccupant: targetBed.nextOccupant || 'None',
+      status: defaultAction === 'checkin' ? 'Occupied' : defaultAction === 'housekeeping' ? 'Housekeeping' : defaultAction === 'sanitize' ? 'Available' : (targetBed.status || 'Occupied'),
+      notes: targetBed.notes || '',
+      actionType: defaultAction,
+      selectedBedId: targetBed.id || (beds[0] ? beds[0].id : '')
+    });
+  };
+
+  const handleModalSubmit = (e) => {
+    e.preventDefault();
+    if(!quickModal) return;
+
+    if(quickModal.isNew){
+      const newRecord = {
+        roomId: quickForm.roomId || (quickForm.bedId.includes('-') ? quickForm.bedId.split('-').slice(0,2).join('-') : 'MH-A'),
+        bedId: quickForm.bedId,
+        currentOccupant: quickForm.currentOccupant || 'Vacant',
+        shiftStatus: quickForm.shiftStatus,
+        vacatingDate: quickForm.vacatingDate || null,
+        nextOccupant: quickForm.nextOccupant || 'None',
+        status: quickForm.status,
+        roadDelayExt: false,
+        notes: quickForm.notes || ''
+      };
+      mutate('campBeds', 'insert', newRecord);
+    } else if(quickForm.actionType === 'checkin') {
+      const selected = beds.find(b => b.id === quickForm.selectedBedId) || quickModal.bed;
+      executeCheckIn(selected, quickForm.currentOccupant, quickForm.vacatingDate);
+    } else if(quickForm.actionType === 'housekeeping') {
+      const selected = beds.find(b => b.id === quickForm.selectedBedId) || quickModal.bed;
+      executeSendToHousekeeping(selected);
+    } else if(quickForm.actionType === 'sanitize') {
+      const selected = beds.find(b => b.id === quickForm.selectedBedId) || quickModal.bed;
+      executeSanitationCleared(selected);
+    } else {
+      // Manual full edit
+      const selected = beds.find(b => b.id === quickForm.selectedBedId) || quickModal.bed;
+      mutate('campBeds', 'update', {
+        ...selected,
+        bedId: quickForm.bedId || selected.bedId,
+        roomId: quickForm.roomId || selected.roomId,
+        currentOccupant: quickForm.currentOccupant || 'Vacant',
+        shiftStatus: quickForm.shiftStatus,
+        vacatingDate: quickForm.vacatingDate || null,
+        nextOccupant: quickForm.nextOccupant || 'None',
+        status: quickForm.status,
+        notes: quickForm.notes
+      });
+    }
+    setQuickModal(null);
+  };
+
+  const filteredBeds = beds.filter(b => {
+    if(filterStatus !== 'ALL' && b.status !== filterStatus) return false;
+    if(searchTerm){
+      const term = searchTerm.toLowerCase();
+      const matchBed = (b.bedId || '').toLowerCase().includes(term);
+      const matchOcc = (b.currentOccupant || '').toLowerCase().includes(term);
+      const matchNext = (b.nextOccupant || '').toLowerCase().includes(term);
+      const matchShift = (b.shiftStatus || '').toLowerCase().includes(term);
+      return matchBed || matchOcc || matchNext || matchShift;
+    }
+    return true;
+  });
+
+  return (
+    <div>
+      {/* Road Delay Safety Status Banner */}
+      <div className="delay-banner">
+        <div>
+          <div className="delay-banner-title">
+            <span>🛡️ ROAD DELAY SAFETY ENGINE</span>
+            {delayedCount > 0 ? (
+              <span className="badge delay-ext">⚠️ {delayedCount} Convoy Delay Extension Active</span>
+            ) : (
+              <span className="badge" style={{background:'#233A2C', color:'#8FCB9F'}}>Nominal Transport Corridor</span>
+            )}
+          </div>
+          <div className="delay-banner-sub">
+            {safetyBannerMsg || "Automated +24h vacating extension protects outbound workers from being unhoused if convoys encounter muddy roads or weather holds."}
+          </div>
+        </div>
+        <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+          {delayedCount === 0 ? (
+            <button className="btn sm" style={{background:'var(--rust)', color:'#fff'}} onClick={handleTriggerGlobalRoadDelay}>
+              🌧️ Simulate Road Delay (+24h All Outbound)
+            </button>
+          ) : (
+            <button className="btn secondary sm" onClick={handleClearGlobalRoadDelay}>
+              ☀️ Clear Road Delay & Restore Normal Rotations
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* KPI Cards for Camp Bed Turnover */}
+      <div className="kpi-row" style={{marginBottom:18}}>
+        <div className="kpi-card clickable" style={{padding:'12px 14px', borderTopColor:'#C4432B'}} onClick={()=>setFilterStatus('Occupied')}>
+          <div className="kpi-label">🔴 Occupied Beds</div>
+          <div className="kpi-value" style={{fontSize:22, color:'#E8A38F'}}>{occupiedCount}</div>
+          <div className="kpi-foot">Locked by active worker</div>
+        </div>
+        <div className="kpi-card clickable" style={{padding:'12px 14px', borderTopColor:'var(--amber)'}} onClick={()=>setFilterStatus('Pending Handover')}>
+          <div className="kpi-label">🟡 Pending Handover</div>
+          <div className="kpi-value" style={{fontSize:22, color:'#E8C285'}}>{pendingCount}</div>
+          <div className="kpi-foot">High-risk! Outgoing leaves today</div>
+        </div>
+        <div className="kpi-card clickable" style={{padding:'12px 14px', borderTopColor:'var(--steel)'}} onClick={()=>setFilterStatus('Housekeeping')}>
+          <div className="kpi-label">🔵 Housekeeping</div>
+          <div className="kpi-value" style={{fontSize:22, color:'#9DBBE0'}}>{housekeepingCount}</div>
+          <div className="kpi-foot">Requires cleaning before check-in</div>
+        </div>
+        <div className="kpi-card ok clickable" style={{padding:'12px 14px'}} onClick={()=>setFilterStatus('Available')}>
+          <div className="kpi-label">🟢 Available Beds</div>
+          <div className="kpi-value" style={{fontSize:22, color:'#8FCB9F'}}>{availableCount}</div>
+          <div className="kpi-foot">Ready for immediate assignment</div>
+        </div>
+      </div>
+
+      {/* Main Panel with Filter, Search, and Action Bar */}
+      <div className="panel">
+        <div className="panel-head" style={{flexWrap:'wrap', gap:12}}>
+          <div>
+            <div className="panel-title">Camp Bed Matrix & Accommodation Allocation</div>
+            <div className="panel-sub">
+              Physical room allocation, shift turnover status, and anti-hot-bedding control ({beds.length} Total Beds)
+            </div>
+          </div>
+          <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+            <button className="btn" onClick={()=>openQuickEntryModal(null, 'checkin')}>
+              + Assign / Update Bed
+            </button>
+            <button className="btn secondary" onClick={()=>openQuickEntryModal(null, 'manual')}>
+              + Add New Bed
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Pills and Search */}
+        <div className="filter-bar">
+          <button className={"filter-chip " + (filterStatus==='ALL'?'active':'')} onClick={()=>setFilterStatus('ALL')}>
+            All Beds ({beds.length})
+          </button>
+          <button className={"filter-chip " + (filterStatus==='Occupied'?'active':'')} onClick={()=>setFilterStatus('Occupied')}>
+            🔴 Occupied ({occupiedCount})
+          </button>
+          <button className={"filter-chip " + (filterStatus==='Pending Handover'?'active':'')} onClick={()=>setFilterStatus('Pending Handover')}>
+            🟡 Pending Handover ({pendingCount})
+          </button>
+          <button className={"filter-chip " + (filterStatus==='Housekeeping'?'active':'')} onClick={()=>setFilterStatus('Housekeeping')}>
+            🔵 Housekeeping ({housekeepingCount})
+          </button>
+          <button className={"filter-chip " + (filterStatus==='Available'?'active':'')} onClick={()=>setFilterStatus('Available')}>
+            🟢 Available ({availableCount})
+          </button>
+
+          <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:8}}>
+            <input
+              type="text"
+              placeholder="Search Bed or Occupant…"
+              value={searchTerm}
+              onChange={e=>setSearchTerm(e.target.value)}
+              style={{
+                background:'var(--bg)', border:'1px solid var(--border)', color:'var(--text)',
+                padding:'5px 10px', borderRadius:6, fontSize:12, fontFamily:'var(--body)', width:180
+              }}
+            />
+            {searchTerm && (
+              <button className="icon-btn" onClick={()=>setSearchTerm('')} title="Clear Search">✕</button>
+            )}
+          </div>
+        </div>
+
+        {/* Data Grid Layout */}
+        {filteredBeds.length === 0 ? (
+          <div className="empty-state">No camp beds match the selected filter.</div>
+        ) : (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th style={{width:130}}>ROOM / BED ID</th>
+                  <th>CURRENT OCCUPANT</th>
+                  <th>SHIFT ROTATION STATUS</th>
+                  <th>VACATING DATE</th>
+                  <th>NEXT RESERVED OCCUPANT</th>
+                  <th>BED STATUS</th>
+                  <th style={{textAlign:'right'}}>QUICK ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBeds.map(bed => {
+                  const isPending = bed.status === 'Pending Handover';
+                  const isOccupied = bed.status === 'Occupied';
+                  const isCleaning = bed.status === 'Housekeeping';
+                  const isAvail = bed.status === 'Available';
+
+                  return (
+                    <tr key={bed.id} className={bed._pending ? 'row-pending' : ''}>
+                      {/* 1. ROOM / BED ID */}
+                      <td className="num" style={{fontWeight:700, color:'var(--text)', fontSize:13}}>
+                        <b>{bed.bedId}</b>
+                      </td>
+
+                      {/* 2. CURRENT OCCUPANT */}
+                      <td>
+                        {bed.currentOccupant === 'Vacant' || !bed.currentOccupant ? (
+                          <span style={{color:'var(--text-dim)', fontStyle:'italic'}}>Vacant</span>
+                        ) : (
+                          <span style={{fontWeight:600, color:'#F3ECDF'}}>{bed.currentOccupant}</span>
+                        )}
+                      </td>
+
+                      {/* 3. SHIFT ROTATION STATUS */}
+                      <td>
+                        <span style={{
+                          fontSize:12.5,
+                          color: isPending ? '#E8C285' : isCleaning ? '#9DBBE0' : isOccupied ? 'var(--text)' : 'var(--text-dim)'
+                        }}>
+                          {bed.shiftStatus || '—'}
+                        </span>
+                      </td>
+
+                      {/* 4. VACATING DATE */}
+                      <td>
+                        {bed.vacatingDate ? (
+                          <div style={{display:'inline-flex', alignItems:'center', flexWrap:'wrap', gap:4}}>
+                            <span className="num" style={{color: bed.roadDelayExt ? '#FFA994' : isPending ? '#E8C285' : 'inherit'}}>
+                              {fmtDate(bed.vacatingDate)}
+                            </span>
+                            {bed.roadDelayExt && (
+                              <span className="badge delay-ext" title="Convoy road delay: +24h safety extension applied">
+                                +24h Ext
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{color:'var(--text-dim)'}}>—</span>
+                        )}
+                      </td>
+
+                      {/* 5. NEXT RESERVED OCCUPANT */}
+                      <td>
+                        {bed.nextOccupant && bed.nextOccupant !== 'None' ? (
+                          <span style={{color: isPending ? '#E8C285' : 'var(--text)', fontWeight: isPending ? 600 : 'normal'}}>
+                            {bed.nextOccupant}
+                          </span>
+                        ) : (
+                          <span style={{color:'var(--text-dim)'}}>None</span>
+                        )}
+                      </td>
+
+                      {/* 6. BED STATUS */}
+                      <td>
+                        {isOccupied && <span className="badge bed-occupied">🔴 Occupied</span>}
+                        {isPending && <span className="badge bed-pending" title="High-risk! Outgoing worker leaves today; incoming worker arrives today.">🟡 Pending Handover</span>}
+                        {isCleaning && <span className="badge bed-housekeeping">🔵 Housekeeping</span>}
+                        {isAvail && <span className="badge bed-available">🟢 Available</span>}
+                      </td>
+
+                      {/* 7. QUICK ACTIONS */}
+                      <td style={{textAlign:'right'}}>
+                        <div className="row-actions" style={{justifyContent:'flex-end'}}>
+                          {/* Pending Handover actions */}
+                          {isPending && (
+                            <>
+                              <button className="btn sm secondary" title="Depart worker & send room to housekeeping"
+                                onClick={()=>executeSendToHousekeeping(bed)}>
+                                Depart → Clean (🔵)
+                              </button>
+                              <button className="btn sm" title="Check-in incoming worker"
+                                onClick={()=>executeCheckIn(bed)}>
+                                Check-In (🔴)
+                              </button>
+                            </>
+                          )}
+
+                          {/* Occupied actions */}
+                          {isOccupied && (
+                            <>
+                              {!bed.roadDelayExt && (
+                                <button className="btn sm secondary" style={{color:'var(--amber)'}} title="Extend vacating date by +24h due to transport delay"
+                                  onClick={()=>handleExtendSingleBed(bed)}>
+                                  +24h Delay
+                                </button>
+                              )}
+                              <button className="btn sm secondary" title="Worker departed -> send room to housekeeping"
+                                onClick={()=>executeSendToHousekeeping(bed)}>
+                                Depart → Clean (🔵)
+                              </button>
+                            </>
+                          )}
+
+                          {/* Housekeeping action */}
+                          {isCleaning && (
+                            <button className="btn sm" style={{background:'var(--olive)', color:'#fff'}} title="Room sanitized and ready for new occupant"
+                              onClick={()=>executeSanitationCleared(bed)}>
+                              ✓ Sanitation Cleared (🟢)
+                            </button>
+                          )}
+
+                          {/* Available action */}
+                          {isAvail && (
+                            <button className="btn sm" title="Assign inbound worker"
+                              onClick={()=>openQuickEntryModal(bed, 'checkin')}>
+                              Check-In Worker (🔴)
+                            </button>
+                          )}
+
+                          {/* Edit icon */}
+                          <button className="icon-btn" title="Edit Full Bed Details" onClick={()=>openQuickEntryModal(bed, 'manual')}>
+                            ✎
+                          </button>
+
+                          {/* Delete icon */}
+                          <button className="icon-btn" title="Delete Bed" onClick={()=>mutate('campBeds', 'delete', bed.id)}>
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* + Quick Entry & Bed Assignment Modal */}
+      {quickModal !== null && (
+        <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) setQuickModal(null); }}>
+          <div className="modal" style={{maxWidth:500}}>
+            <div className="modal-title">
+              {quickModal.isNew ? '+ Add New Bed' : `+ Assign / Update Bed — ${quickForm.bedId || 'Bed Matrix'}`}
+            </div>
+
+            <form onSubmit={handleModalSubmit}>
+              {/* Select Action Mode */}
+              {!quickModal.isNew && (
+                <div style={{marginBottom:16}}>
+                  <label style={{display:'block', fontSize:11, color:'var(--text-dim)', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.5px'}}>
+                    Execute Command:
+                  </label>
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
+                    <button type="button"
+                      className={"btn sm " + (quickForm.actionType==='checkin'?'':'secondary')}
+                      onClick={()=>setQuickForm({...quickForm, actionType:'checkin', status:'Occupied', shiftStatus:'Mid-Roster (Active)'})}>
+                      🔴 Check-In Inbound
+                    </button>
+                    <button type="button"
+                      className={"btn sm " + (quickForm.actionType==='housekeeping'?'':'secondary')}
+                      onClick={()=>setQuickForm({...quickForm, actionType:'housekeeping', status:'Housekeeping', shiftStatus:'Maintenance / Cleaning', currentOccupant:'Vacant'})}>
+                      🔵 Send to Housekeeping
+                    </button>
+                    <button type="button"
+                      className={"btn sm " + (quickForm.actionType==='sanitize'?'':'secondary')}
+                      onClick={()=>setQuickForm({...quickForm, actionType:'sanitize', status:'Available', shiftStatus:'Ready for Assignment', currentOccupant:'Vacant'})}>
+                      🟢 Sanitation Cleared
+                    </button>
+                    <button type="button"
+                      className={"btn sm " + (quickForm.actionType==='manual'?'':'secondary')}
+                      onClick={()=>setQuickForm({...quickForm, actionType:'manual'})}>
+                      📝 Full Details Edit
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Target Bed Selector */}
+              {!quickModal.isNew && (
+                <div className="field">
+                  <label>Selected Bed</label>
+                  <select
+                    value={quickForm.selectedBedId}
+                    onChange={e => {
+                      const sel = beds.find(b => b.id === e.target.value);
+                      if(sel){
+                        setQuickForm({
+                          ...quickForm,
+                          selectedBedId: sel.id,
+                          bedId: sel.bedId,
+                          roomId: sel.roomId,
+                          currentOccupant: sel.nextOccupant && sel.nextOccupant !== 'None' 
+                            ? sel.nextOccupant.replace(/\s*\(In Transit\)/i, '') 
+                            : (sel.currentOccupant === 'Vacant' ? '' : sel.currentOccupant || ''),
+                          shiftStatus: sel.shiftStatus,
+                          vacatingDate: sel.vacatingDate || addDays(todayISO(), 14),
+                          nextOccupant: sel.nextOccupant,
+                          status: sel.status,
+                          notes: sel.notes || ''
+                        });
+                      }
+                    }}
+                  >
+                    {beds.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.bedId} — {b.currentOccupant} ({b.status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Check-in Form */}
+              {(quickForm.actionType === 'checkin' || quickModal.isNew) && (
+                <>
+                  {quickModal.isNew && (
+                    <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+                      <div className="field">
+                        <label>Bed ID</label>
+                        <input type="text" placeholder="e.g. MH-A-05" required
+                          value={quickForm.bedId} onChange={e=>setQuickForm({...quickForm, bedId:e.target.value})} />
+                      </div>
+                      <div className="field">
+                        <label>Room / Wing</label>
+                        <input type="text" placeholder="e.g. MH-A" required
+                          value={quickForm.roomId} onChange={e=>setQuickForm({...quickForm, roomId:e.target.value})} />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="field">
+                    <label>Assign Inbound Worker</label>
+                    <input type="text" placeholder="e.g. Mark Santos" required
+                      value={quickForm.currentOccupant} onChange={e=>setQuickForm({...quickForm, currentOccupant:e.target.value})} />
+                  </div>
+
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+                    <div className="field">
+                      <label>Vacating Date (Roster End)</label>
+                      <input type="date" required
+                        value={quickForm.vacatingDate} onChange={e=>setQuickForm({...quickForm, vacatingDate:e.target.value})} />
+                    </div>
+                    <div className="field">
+                      <label>Shift Status</label>
+                      <input type="text" placeholder="e.g. Mid-Roster (Active)"
+                        value={quickForm.shiftStatus} onChange={e=>setQuickForm({...quickForm, shiftStatus:e.target.value})} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Housekeeping Confirmation */}
+              {quickForm.actionType === 'housekeeping' && !quickModal.isNew && (
+                <div style={{background:'var(--surface2)', padding:12, borderRadius:6, marginBottom:12, border:'1px solid var(--border)'}}>
+                  <div style={{fontWeight:600, color:'#9DBBE0', fontSize:13, marginBottom:4}}>
+                    🔵 Send to Housekeeping & Cleaning
+                  </div>
+                  <div style={{fontSize:12, color:'var(--text-dim)'}}>
+                    This command disconnects the departing worker ({quickForm.currentOccupant}), clears the room to Vacant, and marks status as <b>Housekeeping</b> until sanitation is signed off.
+                  </div>
+                </div>
+              )}
+
+              {/* Sanitation Cleared Confirmation */}
+              {quickForm.actionType === 'sanitize' && !quickModal.isNew && (
+                <div style={{background:'var(--surface2)', padding:12, borderRadius:6, marginBottom:12, border:'1px solid var(--border)'}}>
+                  <div style={{fontWeight:600, color:'#8FCB9F', fontSize:13, marginBottom:4}}>
+                    🟢 Sanitation Cleared & Ready for Occupancy
+                  </div>
+                  <div style={{fontSize:12, color:'var(--text-dim)'}}>
+                    This command signs off housekeeping disinfection, setting status to <b>Available</b> for immediate inbound crew check-in.
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Details Full Edit */}
+              {quickForm.actionType === 'manual' && !quickModal.isNew && (
+                <>
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+                    <div className="field">
+                      <label>Bed ID</label>
+                      <input type="text" value={quickForm.bedId} onChange={e=>setQuickForm({...quickForm, bedId:e.target.value})} required />
+                    </div>
+                    <div className="field">
+                      <label>Current Occupant</label>
+                      <input type="text" value={quickForm.currentOccupant} onChange={e=>setQuickForm({...quickForm, currentOccupant:e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+                    <div className="field">
+                      <label>Bed Status</label>
+                      <select value={quickForm.status} onChange={e=>setQuickForm({...quickForm, status:e.target.value})}>
+                        <option value="Occupied">🔴 Occupied</option>
+                        <option value="Pending Handover">🟡 Pending Handover</option>
+                        <option value="Housekeeping">🔵 Housekeeping</option>
+                        <option value="Available">🟢 Available</option>
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Vacating Date</label>
+                      <input type="date" value={quickForm.vacatingDate || ''} onChange={e=>setQuickForm({...quickForm, vacatingDate:e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+                    <div className="field">
+                      <label>Shift Rotation Status</label>
+                      <input type="text" value={quickForm.shiftStatus} onChange={e=>setQuickForm({...quickForm, shiftStatus:e.target.value})} />
+                    </div>
+                    <div className="field">
+                      <label>Next Reserved Occupant</label>
+                      <input type="text" value={quickForm.nextOccupant} onChange={e=>setQuickForm({...quickForm, nextOccupant:e.target.value})} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="field">
+                <label>Notes / Logistics Reference</label>
+                <input type="text" placeholder="e.g. Transport convoy seat #4, night shift operator"
+                  value={quickForm.notes || ''} onChange={e=>setQuickForm({...quickForm, notes:e.target.value})} />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn secondary" onClick={()=>setQuickModal(null)}>Cancel</button>
+                <button type="submit" className="btn">
+                  {quickForm.actionType === 'checkin' ? 'Check-In Worker' :
+                   quickForm.actionType === 'housekeeping' ? 'Confirm Housekeeping' :
+                   quickForm.actionType === 'sanitize' ? 'Confirm Cleared' : 'Save Bed Record'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- module: Workforce with Attendance, Calendar & Camp Bed Matrix ---------- */
 function Workforce({data, mutate}){
   const [subTab, setSubTab] = useState('attendance');
   const [selectedDate, setSelectedDate] = useState(todayISO());
@@ -1317,6 +2050,8 @@ function Workforce({data, mutate}){
     {key:'status', label:'Deployment Status', field:{type:'select', options:['On Site','Off Rotation'], required:true}, render:r=><span className={"badge "+slug(r.status)}>{r.status}</span>},
   ];
 
+  const pendingHandoverCount = (data.campBeds || DEFAULT_CAMP_BEDS).filter(b => b.status === 'Pending Handover' || b.roadDelayExt).length;
+
   return (
     <div>
       <div className="tab-pills">
@@ -1326,9 +2061,19 @@ function Workforce({data, mutate}){
         <button className={"tab-pill " + (subTab==='registry'?'active':'')} onClick={()=>setSubTab('registry')}>
           👥 Worker Registry & Certifications ({data.workforce.length})
         </button>
+        <button className={"tab-pill " + (subTab==='campbeds'?'active':'')} onClick={()=>setSubTab('campbeds')}>
+          🛏️ Camp Bed Matrix ({(data.campBeds || DEFAULT_CAMP_BEDS).length})
+          {pendingHandoverCount > 0 && (
+            <span style={{marginLeft:6, background:'var(--amber)', color:'#1A1305', borderRadius:10, padding:'1px 6px', fontSize:10, fontWeight:'bold'}}>
+              {pendingHandoverCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      {subTab === 'attendance' ? (
+      {subTab === 'campbeds' ? (
+        <CampBedMatrix data={data} mutate={mutate} />
+      ) : subTab === 'attendance' ? (
         <div>
           <div className="calendar-bar">
             <div className="date-controls">
@@ -1748,7 +2493,7 @@ function App(){
     dashboard:['Executive Dashboard','Cross-module status, generated on each sync'],
     procurement:['Procurement & Long-Lead-Time Materials','Lead-time-driven ordering and supplier tiering'],
     transport:['Transportation & Logistics Cost Control','Multi-modal tracking, landed cost, fuel sub-ledger'],
-    workforce:['Workforce & Daily Attendance Tracking','2-on/2-off rotation, muster logs, time-in & time-out'],
+    workforce:['Workforce, Daily Attendance & Camp Bed Matrix','2-on/2-off rotation, muster logs, time tracking & room allocation'],
     costschedule:['Cost & Schedule Integration','Committed / in-transit / installed cost states'],
     earlywarning:['Early Warning / Risk Alerts','Rule-based automated flags, ranked by severity'],
     field:['Field Reporting','Offline-first daily entry, prioritized sync'],
