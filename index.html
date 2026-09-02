@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Site PMIS — Remote Mining Facility</title>
+<title>Site PMIS — Remote Mining Camp (Brgy. Bolhoon, San Miguel, Surigao Del Sur)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -325,6 +325,311 @@
     .pulse-strip{ flex-wrap:wrap; gap:8px; width:100%; }
     .calendar-bar{ flex-direction:column; align-items:flex-start; }
   }
+
+  /* ---------- Documentation & Manuals View Styles ---------- */
+  .doc-nav-bar {
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:12px 16px; margin-bottom:18px;
+  }
+  .doc-rule-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:18px 20px; margin-bottom:18px; border-left:4px solid var(--amber);
+  }
+  .doc-rule-card.critical { border-left-color:var(--rust); }
+  .doc-rule-card.warning { border-left-color:var(--amber); }
+  .doc-box {
+    background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+    padding:10px 14px; margin:10px 0; font-size:12.5px;
+  }
+  .doc-box.formula { font-family:var(--mono); border-left:3px solid var(--steel); color:#CBE3F5; }
+  .doc-box.example { border-left:3px solid var(--amber); }
+  .doc-box.action { border-left:3px solid var(--olive); }
+  .doc-quick-jump {
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+  }
+  .doc-jump-chip {
+    font-size:11px; font-family:var(--mono); padding:3px 8px; border-radius:4px;
+    background:var(--surface2); border:1px solid var(--border); color:var(--text-dim);
+    cursor:pointer; text-decoration:none; transition:all .15s;
+  }
+  .doc-jump-chip:hover { color:var(--amber); border-color:var(--amber); }
+
+  /* ---------- Media Print Styles ---------- */
+  @media print {
+    @page { margin: 12mm 15mm; size: A4 portrait; }
+    body, #root, .app, .main, .content { background: #fff !important; color: #111 !important; }
+    .sidebar, .topbar, .pulse-strip, .install-btn, .btn, .modal-overlay, .tab-pills, .filter-bar, .sync-chip, .doc-nav-bar, .doc-quick-jump, .row-actions, .icon-btn {
+      display: none !important;
+    }
+    .content { padding: 0 !important; overflow: visible !important; }
+    .panel, .kpi-card, .doc-rule-card {
+      background: #fff !important; border: 1pt solid #aaa !important; color: #111 !important;
+      break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; margin-bottom: 14pt !important;
+    }
+    .doc-rule-card.critical { border-left: 4pt solid #b8321b !important; }
+    .doc-rule-card.warning { border-left: 4pt solid #c76e0e !important; }
+    .doc-box { background: #f5f5f5 !important; border: 1pt solid #ccc !important; color: #111 !important; }
+    .doc-box.formula { color: #000 !important; font-weight: bold !important; border-left: 3pt solid #3d6c8a !important; }
+    .table-scroll { overflow: visible !important; }
+    table { width: 100% !important; min-width: 100% !important; border-collapse: collapse !important; font-size: 9.5pt !important; }
+    th { background: #eaeaea !important; color: #000 !important; border-bottom: 1.5pt solid #000 !important; padding: 6pt !important; }
+    td { border-bottom: 1pt solid #ddd !important; color: #111 !important; padding: 6pt !important; }
+    tr:nth-child(even) td { background: #fafafa !important; }
+    .badge { background: transparent !important; border: 1pt solid #555 !important; color: #000 !important; font-weight: bold !important; }
+    .badge.critical { border-color: #b8321b !important; color: #b8321b !important; }
+    .badge.warning { border-color: #c76e0e !important; color: #c76e0e !important; }
+    .badge.ok, .badge.installed, .badge.delivered, .badge.present, .badge.primary { border-color: #4a6e40 !important; color: #4a6e40 !important; }
+    .print-only-header {
+      display: block !important; border-bottom: 2pt solid #000; padding-bottom: 8pt; margin-bottom: 14pt;
+    }
+    .print-only-footer {
+      display: block !important; border-top: 1pt solid #ccc; padding-top: 6pt; margin-top: 24pt;
+      font-size: 8pt; text-align: center; color: #666; font-family: monospace;
+    }
+  }
+  /* ---------- Portal & Role Landing Page Styles ---------- */
+  .portal-bg {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 20%, #251D14 0%, #17140F 70%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  .portal-bg::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #C4432B, #E8871E, #5C8AA6, #7A9070);
+  }
+  .portal-container {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    z-index: 2;
+  }
+  .portal-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .portal-brand {
+    font-family: var(--disp);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .portal-brand .dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 12px var(--amber);
+  }
+  .portal-location {
+    font-family: var(--disp);
+    font-size: 16.5px;
+    letter-spacing: 0.5px;
+    color: var(--amber);
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+  .portal-subtitle {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.4;
+  }
+  .portal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 640px) {
+    .portal-grid { grid-template-columns: 1fr; }
+    .portal-brand { font-size: 26px; }
+    .portal-location { font-size: 14.5px; }
+  }
+  .portal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .portal-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+  .portal-card.worker::after { background: var(--amber); }
+  .portal-card.admin::after { background: var(--steel); }
+  .portal-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(232, 135, 30, 0.45);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  }
+  .portal-card.admin:hover {
+    border-color: rgba(92, 138, 166, 0.55);
+  }
+  .portal-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .portal-icon {
+    font-size: 28px;
+    line-height: 1;
+    background: var(--surface2);
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .portal-badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .portal-badge.open {
+    background: rgba(122, 144, 112, 0.18);
+    color: #8FCB9F;
+    border: 1px solid rgba(143, 203, 159, 0.3);
+  }
+  .portal-badge.locked {
+    background: rgba(92, 138, 166, 0.18);
+    color: #9DBBE0;
+    border: 1px solid rgba(157, 187, 224, 0.3);
+  }
+  .portal-card-title {
+    font-family: var(--disp);
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .portal-card-desc {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    margin-bottom: 20px;
+    flex: 1;
+  }
+  .portal-btn {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: var(--body);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    transition: all 0.15s;
+  }
+  .portal-btn.worker {
+    background: var(--amber);
+    color: #1A1305;
+  }
+  .portal-btn.worker:hover {
+    background: #f5952b;
+    box-shadow: 0 0 14px rgba(232, 135, 30, 0.4);
+  }
+  .portal-btn.admin {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--steel);
+  }
+  .portal-btn.admin:hover {
+    background: var(--steel);
+    color: #fff;
+    box-shadow: 0 0 14px rgba(92, 138, 166, 0.4);
+  }
+
+  /* Role Tag & Switcher in App Topbar */
+  .role-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .role-indicator.worker {
+    border-color: rgba(232, 135, 30, 0.5);
+    color: var(--amber);
+  }
+  .role-indicator.admin {
+    border-color: rgba(92, 138, 166, 0.5);
+    color: #9DBBE0;
+  }
+  .role-switch-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--body);
+    transition: all 0.15s;
+  }
+  .role-switch-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+    background: var(--surface2);
+  }
+  .password-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .password-toggle {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+  }
+  .password-toggle:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -666,7 +971,7 @@ function useStore(){
 }
 
 /* ---------- generic CRUD table ---------- */
-function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, renderExtra}){
+function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, renderExtra, readOnly}){
   const [modalRow, setModalRow] = useState(null);
   const [form, setForm] = useState({});
   const [pendingFiles, setPendingFiles] = useState({});
@@ -716,7 +1021,7 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
           <div className="panel-title">{title}</div>
           {sub && <div className="panel-sub">{sub}</div>}
         </div>
-        <button className="btn" onClick={openNew}>+ {addLabel || 'Add'}</button>
+        {!readOnly && onSave && <button className="btn" onClick={openNew}>+ {addLabel || 'Add'}</button>}
       </div>
       {rows.length === 0 ? (
         <div className="empty-state">No records yet. Add the first one to start tracking.</div>
@@ -725,7 +1030,7 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
         <table>
           <thead><tr>
             {columns.map(c => <th key={c.key}>{c.label}</th>)}
-            <th></th>
+            {!readOnly && <th></th>}
           </tr></thead>
           <tbody>
             {rows.map(row => (
@@ -735,12 +1040,14 @@ function DataTable({title, sub, columns, rows, onSave, onDelete, addLabel, rende
                     {c.render ? c.render(row) : row[c.key]}
                   </td>
                 ))}
-                <td>
-                  <div className="row-actions">
-                    <button className="icon-btn" onClick={()=>openEdit(row)} title="Edit">✎</button>
-                    <button className="icon-btn" onClick={()=>onDelete(row.id)} title="Delete">✕</button>
-                  </div>
-                </td>
+                {!readOnly && (
+                  <td>
+                    <div className="row-actions">
+                      <button className="icon-btn" onClick={()=>openEdit(row)} title="Edit">✎</button>
+                      <button className="icon-btn" onClick={()=>onDelete(row.id)} title="Delete">✕</button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -939,8 +1246,9 @@ function computeAlerts(data){
   return alerts;
 }
 
-/* ---------- dashboard with Spend Budget Pie Chart ---------- */
-function Dashboard({data, alerts, onNavigate}){
+/* ---------- dashboard with Spend Budget Pie Chart (Role-Aware) ---------- */
+function Dashboard({data, alerts, onNavigate, role}){
+  const isWorker = role === 'worker';
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const spendPieRef = useRef(null);
@@ -955,10 +1263,11 @@ function Dashboard({data, alerts, onNavigate}){
   const totalSpent = data.activities.reduce((s,a)=>s+Number(a.committed||0)+Number(a.inTransit||0)+Number(a.installed||0),0);
   const onSiteWorkers = data.workforce.filter(w=>w.status==='On Site').length;
   const activeShipments = data.shipments.filter(s=>s.legStatus!=='Delivered').length;
+  const todayPresent = (data.attendance || []).filter(a => a.date === todayISO() && (a.status === 'Present' || a.status === 'Late')).length;
 
-  // 1. Stacked Bar Chart (Committed / In-Transit / Installed)
+  // 1. Stacked Bar Chart (Committed / In-Transit / Installed) - Admin only
   useEffect(()=>{
-    if(!chartRef.current) return;
+    if(isWorker || !chartRef.current) return;
     if(chartInstance.current) chartInstance.current.destroy();
     chartInstance.current = new Chart(chartRef.current, {
       type:'bar',
@@ -982,11 +1291,11 @@ function Dashboard({data, alerts, onNavigate}){
       }
     });
     return ()=>{ if(chartInstance.current) chartInstance.current.destroy(); };
-  },[data.activities]);
+  },[data.activities, isWorker]);
 
-  // 2. Spend Budget Pie / Donut Chart with Hover Spend Name & Breakdown
+  // 2. Spend Budget Pie / Donut Chart with Hover Spend Name & Breakdown - Admin only
   useEffect(()=>{
-    if(!spendPieRef.current) return;
+    if(isWorker || !spendPieRef.current) return;
     if(spendPieInstance.current) spendPieInstance.current.destroy();
 
     const spendData = data.activities.map(a => {
@@ -1068,9 +1377,9 @@ function Dashboard({data, alerts, onNavigate}){
     });
 
     return ()=>{ if(spendPieInstance.current) spendPieInstance.current.destroy(); };
-  }, [data.activities]);
+  }, [data.activities, isWorker]);
 
-  // 3. Material Staging Status Doughnut Chart
+  // 3. Material Staging Status Doughnut Chart (Visible to both Worker and Admin)
   useEffect(()=>{
     if(!materialPieRef.current) return;
     if(materialPieInstance.current) materialPieInstance.current.destroy();
@@ -1081,13 +1390,13 @@ function Dashboard({data, alerts, onNavigate}){
       data:{ labels: statuses, datasets:[{data:counts, backgroundColor:['#5C8AA6','#E8871E','#D97736','#7A9070','#8FCB9F']}] },
       options:{
         responsive:true, maintainAspectRatio:false,
-        onClick:()=>onNavigate('procurement'),
+        onClick:()=> isWorker ? onNavigate('earlywarning') : onNavigate('procurement'),
         onHover:(evt,els)=>{ evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
         plugins:{legend:{position:'bottom', labels:{color:'#A99A85', font:{size:10}, boxWidth:10}}}
       }
     });
     return ()=>{ if(materialPieInstance.current) materialPieInstance.current.destroy(); };
-  },[data.materials]);
+  },[data.materials, isWorker]);
 
   return (
     <div>
@@ -1097,16 +1406,28 @@ function Dashboard({data, alerts, onNavigate}){
           <div className="kpi-value">{alerts.length}</div>
           <div className="kpi-foot">{critical} critical · {warning} warning</div>
         </div>
-        <div className="kpi-card clickable" onClick={()=>onNavigate('costschedule')}>
-          <div className="kpi-label">Budget vs Spend</div>
-          <div className="kpi-value">{totalBudget ? Math.round((totalSpent/totalBudget)*100) : 0}%</div>
-          <div className="kpi-foot">{fmtMoney(totalSpent)} of {fmtMoney(totalBudget)}</div>
-        </div>
-        <div className="kpi-card clickable" onClick={()=>onNavigate('transport')}>
+
+        {/* Budget KPI is shown ONLY to Admin; Workers see Today's Attendance */}
+        {isWorker ? (
+          <div className="kpi-card ok clickable" onClick={()=>onNavigate('workforce')}>
+            <div className="kpi-label">Today's Attendance</div>
+            <div className="kpi-value" style={{color:'#8FCB9F'}}>{todayPresent} / {onSiteWorkers}</div>
+            <div className="kpi-foot">On-site crew marked present / late</div>
+          </div>
+        ) : (
+          <div className="kpi-card clickable" onClick={()=>onNavigate('costschedule')}>
+            <div className="kpi-label">Budget vs Spend</div>
+            <div className="kpi-value">{totalBudget ? Math.round((totalSpent/totalBudget)*100) : 0}%</div>
+            <div className="kpi-foot">{fmtMoney(totalSpent)} of {fmtMoney(totalBudget)}</div>
+          </div>
+        )}
+
+        <div className="kpi-card clickable" onClick={()=> isWorker ? onNavigate('earlywarning') : onNavigate('transport')}>
           <div className="kpi-label">Active Shipments</div>
           <div className="kpi-value">{activeShipments}</div>
           <div className="kpi-foot">{data.shipments.length} total on record</div>
         </div>
+
         <div className="kpi-card clickable" onClick={()=>onNavigate('workforce')}>
           <div className="kpi-label">Workforce On Site</div>
           <div className="kpi-value">{onSiteWorkers}</div>
@@ -1114,37 +1435,80 @@ function Dashboard({data, alerts, onNavigate}){
         </div>
       </div>
 
-      <div className="grid-3" style={{marginBottom: 20}}>
-        <div className="panel" style={{marginBottom:0}}>
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">Cost & Schedule Breakdown</div>
-              <div className="panel-sub">Committed / In-Transit / Installed by Cost Code</div>
+      {/* Chart Layout: Admin sees 3 charts (2 financial + 1 material); Worker sees 1 material chart + 1 operational quick-action panel */}
+      {isWorker ? (
+        <div className="grid-2" style={{marginBottom: 20}}>
+          <div className="panel" style={{marginBottom:0}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title">Material Staging Status</div>
+                <div className="panel-sub">Hub → Port → Laydown → Installed</div>
+              </div>
             </div>
+            <div className="chart-wrap"><canvas ref={materialPieRef}></canvas></div>
           </div>
-          <div className="chart-wrap"><canvas ref={chartRef}></canvas></div>
-        </div>
 
-        <div className="panel" style={{marginBottom:0}}>
-          <div className="panel-head">
+          <div className="panel" style={{marginBottom:0, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
             <div>
-              <div className="panel-title">Spend Budget Distribution</div>
-              <div className="panel-sub">Hover to inspect spend name & budget allocation</div>
+              <div className="panel-head">
+                <div>
+                  <div className="panel-title">👷 Field Operations & Attendance</div>
+                  <div className="panel-sub">Shift muster logging & accommodation status</div>
+                </div>
+                <span className="badge present">✓ Active Shift</span>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', lineHeight:1.5, marginBottom:16}}>
+                You are currently in <b>Field Worker Mode</b>. Financial budgets and contractor billing records are restricted. You can view site risks, check room beds, and log daily shift attendance.
+              </div>
+              <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom:16}}>
+                <div style={{background:'var(--surface2)', padding:'10px 14px', borderRadius:8, border:'1px solid var(--border)', flex:1, minWidth:120}}>
+                  <div style={{fontSize:11, color:'var(--text-dim)', textTransform:'uppercase'}}>Attendance Today</div>
+                  <div style={{fontSize:18, fontWeight:700, color:'var(--amber)', marginTop:2}}>{todayPresent} Logged</div>
+                </div>
+                <div style={{background:'var(--surface2)', padding:'10px 14px', borderRadius:8, border:'1px solid var(--border)', flex:1, minWidth:120}}>
+                  <div style={{fontSize:11, color:'var(--text-dim)', textTransform:'uppercase'}}>Site Roster</div>
+                  <div style={{fontSize:18, fontWeight:700, color:'#8FCB9F', marginTop:2}}>{onSiteWorkers} On Site</div>
+                </div>
+              </div>
             </div>
+            <button className="btn" style={{width:'100%', justifyContent:'center'}} onClick={()=>onNavigate('workforce')}>
+              📅 Go to Daily Attendance & Log Shift →
+            </button>
           </div>
-          <div className="chart-wrap"><canvas ref={spendPieRef}></canvas></div>
         </div>
+      ) : (
+        <div className="grid-3" style={{marginBottom: 20}}>
+          <div className="panel" style={{marginBottom:0}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title">Cost & Schedule Breakdown</div>
+                <div className="panel-sub">Committed / In-Transit / Installed by Cost Code</div>
+              </div>
+            </div>
+            <div className="chart-wrap"><canvas ref={chartRef}></canvas></div>
+          </div>
 
-        <div className="panel" style={{marginBottom:0}}>
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">Material Staging Status</div>
-              <div className="panel-sub">Hub → Port → Laydown → Installed</div>
+          <div className="panel" style={{marginBottom:0}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title">Spend Budget Distribution</div>
+                <div className="panel-sub">Hover to inspect spend name & budget allocation</div>
+              </div>
             </div>
+            <div className="chart-wrap"><canvas ref={spendPieRef}></canvas></div>
           </div>
-          <div className="chart-wrap"><canvas ref={materialPieRef}></canvas></div>
+
+          <div className="panel" style={{marginBottom:0}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title">Material Staging Status</div>
+                <div className="panel-sub">Hub → Port → Laydown → Installed</div>
+              </div>
+            </div>
+            <div className="chart-wrap"><canvas ref={materialPieRef}></canvas></div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-head">
@@ -1157,7 +1521,13 @@ function Dashboard({data, alerts, onNavigate}){
           <div className="empty-state">No active risk flags. Site conditions nominal.</div>
         ) : (
           alerts.slice(0,8).map((a,i)=>(
-            <div className={"alert-row clickable " + a.severity} key={i} onClick={()=>onNavigate(a.module || 'earlywarning')}>
+            <div className={"alert-row clickable " + a.severity} key={i} onClick={()=> {
+              if(isWorker){
+                onNavigate(a.module === 'workforce' ? 'workforce' : 'earlywarning');
+              } else {
+                onNavigate(a.module || 'earlywarning');
+              }
+            }}>
               <div className="alert-icon">{a.severity==='critical' ? '⛔' : '⚠'}</div>
               <div>
                 <div className="alert-title">{a.title}</div>
@@ -1310,7 +1680,8 @@ function Transportation({data, mutate, mutateSettings}){
 }
 
 /* ---------- module: Camp Bed Matrix (Workforce Sub-View) ---------- */
-function CampBedMatrix({data, mutate}){
+function CampBedMatrix({data, mutate, role}){
+  const isWorker = role === 'worker';
   const beds = (data.campBeds && data.campBeds.length > 0) ? data.campBeds : DEFAULT_CAMP_BEDS;
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -1521,17 +1892,19 @@ function CampBedMatrix({data, mutate}){
             {safetyBannerMsg || "Automated +24h vacating extension protects outbound workers from being unhoused if convoys encounter muddy roads or weather holds."}
           </div>
         </div>
-        <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
-          {delayedCount === 0 ? (
-            <button className="btn sm" style={{background:'var(--rust)', color:'#fff'}} onClick={handleTriggerGlobalRoadDelay}>
-              🌧️ Simulate Road Delay (+24h All Outbound)
-            </button>
-          ) : (
-            <button className="btn secondary sm" onClick={handleClearGlobalRoadDelay}>
-              ☀️ Clear Road Delay & Restore Normal Rotations
-            </button>
-          )}
-        </div>
+        {!isWorker && (
+          <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+            {delayedCount === 0 ? (
+              <button className="btn sm" style={{background:'var(--rust)', color:'#fff'}} onClick={handleTriggerGlobalRoadDelay}>
+                🌧️ Simulate Road Delay (+24h All Outbound)
+              </button>
+            ) : (
+              <button className="btn secondary sm" onClick={handleClearGlobalRoadDelay}>
+                ☀️ Clear Road Delay & Restore Normal Rotations
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI Cards for Camp Bed Turnover */}
@@ -1567,14 +1940,16 @@ function CampBedMatrix({data, mutate}){
               Physical room allocation, shift turnover status, and anti-hot-bedding control ({beds.length} Total Beds)
             </div>
           </div>
-          <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
-            <button className="btn" onClick={()=>openQuickEntryModal(null, 'checkin')}>
-              + Assign / Update Bed
-            </button>
-            <button className="btn secondary" onClick={()=>openQuickEntryModal(null, 'manual')}>
-              + Add New Bed
-            </button>
-          </div>
+          {!isWorker && (
+            <div style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+              <button className="btn" onClick={()=>openQuickEntryModal(null, 'checkin')}>
+                + Assign / Update Bed
+              </button>
+              <button className="btn secondary" onClick={()=>openQuickEntryModal(null, 'manual')}>
+                + Add New Bed
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filter Pills and Search */}
@@ -1626,7 +2001,7 @@ function CampBedMatrix({data, mutate}){
                   <th>VACATING DATE</th>
                   <th>NEXT RESERVED OCCUPANT</th>
                   <th>BED STATUS</th>
-                  <th style={{textAlign:'right'}}>QUICK ACTIONS</th>
+                  {!isWorker && <th style={{textAlign:'right'}}>QUICK ACTIONS</th>}
                 </tr>
               </thead>
               <tbody>
@@ -1699,66 +2074,68 @@ function CampBedMatrix({data, mutate}){
                         {isAvail && <span className="badge bed-available">🟢 Available</span>}
                       </td>
 
-                      {/* 7. QUICK ACTIONS */}
-                      <td style={{textAlign:'right'}}>
-                        <div className="row-actions" style={{justifyContent:'flex-end'}}>
-                          {/* Pending Handover actions */}
-                          {isPending && (
-                            <>
-                              <button className="btn sm secondary" title="Depart worker & send room to housekeeping"
-                                onClick={()=>executeSendToHousekeeping(bed)}>
-                                Depart → Clean (🔵)
-                              </button>
-                              <button className="btn sm" title="Check-in incoming worker"
-                                onClick={()=>executeCheckIn(bed)}>
-                                Check-In (🔴)
-                              </button>
-                            </>
-                          )}
-
-                          {/* Occupied actions */}
-                          {isOccupied && (
-                            <>
-                              {!bed.roadDelayExt && (
-                                <button className="btn sm secondary" style={{color:'var(--amber)'}} title="Extend vacating date by +24h due to transport delay"
-                                  onClick={()=>handleExtendSingleBed(bed)}>
-                                  +24h Delay
+                      {/* 7. QUICK ACTIONS (Admin only) */}
+                      {!isWorker && (
+                        <td style={{textAlign:'right'}}>
+                          <div className="row-actions" style={{justifyContent:'flex-end'}}>
+                            {/* Pending Handover actions */}
+                            {isPending && (
+                              <>
+                                <button className="btn sm secondary" title="Depart worker & send room to housekeeping"
+                                  onClick={()=>executeSendToHousekeeping(bed)}>
+                                  Depart → Clean (🔵)
                                 </button>
-                              )}
-                              <button className="btn sm secondary" title="Worker departed -> send room to housekeeping"
-                                onClick={()=>executeSendToHousekeeping(bed)}>
-                                Depart → Clean (🔵)
+                                <button className="btn sm" title="Check-in incoming worker"
+                                  onClick={()=>executeCheckIn(bed)}>
+                                  Check-In (🔴)
+                                </button>
+                              </>
+                            )}
+
+                            {/* Occupied actions */}
+                            {isOccupied && (
+                              <>
+                                {!bed.roadDelayExt && (
+                                  <button className="btn sm secondary" style={{color:'var(--amber)'}} title="Extend vacating date by +24h due to transport delay"
+                                    onClick={()=>handleExtendSingleBed(bed)}>
+                                    +24h Delay
+                                  </button>
+                                )}
+                                <button className="btn sm secondary" title="Worker departed -> send room to housekeeping"
+                                  onClick={()=>executeSendToHousekeeping(bed)}>
+                                  Depart → Clean (🔵)
+                                </button>
+                              </>
+                            )}
+
+                            {/* Housekeeping action */}
+                            {isCleaning && (
+                              <button className="btn sm" style={{background:'var(--olive)', color:'#fff'}} title="Room sanitized and ready for new occupant"
+                                onClick={()=>executeSanitationCleared(bed)}>
+                                ✓ Sanitation Cleared (🟢)
                               </button>
-                            </>
-                          )}
+                            )}
 
-                          {/* Housekeeping action */}
-                          {isCleaning && (
-                            <button className="btn sm" style={{background:'var(--olive)', color:'#fff'}} title="Room sanitized and ready for new occupant"
-                              onClick={()=>executeSanitationCleared(bed)}>
-                              ✓ Sanitation Cleared (🟢)
+                            {/* Available action */}
+                            {isAvail && (
+                              <button className="btn sm" title="Assign inbound worker"
+                                onClick={()=>openQuickEntryModal(bed, 'checkin')}>
+                                Check-In Worker (🔴)
+                              </button>
+                            )}
+
+                            {/* Edit icon */}
+                            <button className="icon-btn" title="Edit Full Bed Details" onClick={()=>openQuickEntryModal(bed, 'manual')}>
+                              ✎
                             </button>
-                          )}
 
-                          {/* Available action */}
-                          {isAvail && (
-                            <button className="btn sm" title="Assign inbound worker"
-                              onClick={()=>openQuickEntryModal(bed, 'checkin')}>
-                              Check-In Worker (🔴)
+                            {/* Delete icon */}
+                            <button className="icon-btn" title="Delete Bed" onClick={()=>mutate('campBeds', 'delete', bed.id)}>
+                              ✕
                             </button>
-                          )}
-
-                          {/* Edit icon */}
-                          <button className="icon-btn" title="Edit Full Bed Details" onClick={()=>openQuickEntryModal(bed, 'manual')}>
-                            ✎
-                          </button>
-
-                          {/* Delete icon */}
-                          <button className="icon-btn" title="Delete Bed" onClick={()=>mutate('campBeds', 'delete', bed.id)}>
-                            ✕
-                          </button>
-                        </div>
-                      </td>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -1768,8 +2145,8 @@ function CampBedMatrix({data, mutate}){
         )}
       </div>
 
-      {/* + Quick Entry & Bed Assignment Modal */}
-      {quickModal !== null && (
+      {/* + Quick Entry & Bed Assignment Modal (Admin only) */}
+      {!isWorker && quickModal !== null && (
         <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) setQuickModal(null); }}>
           <div className="modal" style={{maxWidth:500}}>
             <div className="modal-title">
@@ -1972,7 +2349,8 @@ function CampBedMatrix({data, mutate}){
 }
 
 /* ---------- module: Workforce with Attendance, Calendar & Camp Bed Matrix ---------- */
-function Workforce({data, mutate}){
+function Workforce({data, mutate, role}){
+  const isWorker = role === 'worker';
   const [subTab, setSubTab] = useState('attendance');
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [editModal, setEditModal] = useState(null);
@@ -2072,7 +2450,7 @@ function Workforce({data, mutate}){
       </div>
 
       {subTab === 'campbeds' ? (
-        <CampBedMatrix data={data} mutate={mutate} />
+        <CampBedMatrix data={data} mutate={mutate} role={role} />
       ) : subTab === 'attendance' ? (
         <div>
           <div className="calendar-bar">
@@ -2212,6 +2590,7 @@ function Workforce({data, mutate}){
           columns={registryCols}
           rows={data.workforce}
           addLabel="Worker"
+          readOnly={isWorker}
           onSave={(rec, isNew)=> mutate('workforce', isNew ? 'insert' : 'update', rec)}
           onDelete={(id)=> mutate('workforce', 'delete', id)}
         />
@@ -2407,8 +2786,698 @@ function EarlyWarning({alerts, onNavigate}){
   );
 }
 
+/* ---------- module: Documentation & Manuals ---------- */
+function DocsManual({onNavigate}){
+  const [docTab, setDocTab] = useState('all'); // 'all', 'guide', 'dict'
+  const [query, setQuery] = useState('');
+
+  const q = query.toLowerCase().trim();
+  const match = (text) => !q || (text || '').toLowerCase().includes(q);
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  return (
+    <div>
+      {/* Top action and filter bar */}
+      <div className="doc-nav-bar">
+        <div style={{display:'flex', alignItems:'center', gap:8, flexWrap:'wrap'}}>
+          <div className="tab-pills" style={{marginBottom:0, borderBottom:'none', paddingBottom:0}}>
+            <button className={"tab-pill "+(docTab==='all'?'active':'')} onClick={()=>setDocTab('all')}>📑 All Manuals</button>
+            <button className={"tab-pill "+(docTab==='guide'?'active':'')} onClick={()=>setDocTab('guide')}>📘 Early Warning Guide</button>
+            <button className={"tab-pill "+(docTab==='dict'?'active':'')} onClick={()=>setDocTab('dict')}>📋 Field Dictionary</button>
+          </div>
+        </div>
+
+        <div style={{display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
+          <input
+            type="text"
+            className="field"
+            style={{width:200, padding:'6px 10px', fontSize:12.5, margin:0}}
+            placeholder="🔍 Search rules, fields…"
+            value={query}
+            onChange={e=>setQuery(e.target.value)}
+          />
+          <button className="btn" onClick={()=>window.print()} title="Print or save as PDF">
+            🖨️ Print / Save PDF
+          </button>
+          <a href="docs.html" target="_blank" rel="noopener noreferrer" className="btn secondary" title="Open standalone printable page">
+            ↗ Open Standalone Page
+          </a>
+        </div>
+      </div>
+
+      {/* Quick Jump Anchors */}
+      <div className="doc-quick-jump">
+        <span style={{fontSize:11, color:'var(--text-dim)', alignSelf:'center', marginRight:4}}>Quick Jump:</span>
+        {(docTab==='all' || docTab==='guide') && (
+          <>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-summary')}>🧭 7 Rules Summary</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-1')}>1. Delayed Shipment</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-2')}>2. Weather Alert</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-3')}>3. Must-Order-By</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-4')}>4. Cert Expiry</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-5')}>5. Fuel Runway</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-6')}>6. Budget Overrun</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-7')}>7. Camp Beds</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-rule-attendance')}>📅 Shift Attendance</span>
+          </>
+        )}
+        {(docTab==='all' || docTab==='dict') && (
+          <>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-proc')}>📦 Procurement Fields</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-supp')}>🏢 Supplier Fields</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-trans')}>🚚 Transport Fields</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-fuel')}>⛽ Fuel Fields</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-work')}>👥 Workforce Fields</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-cost')}>💰 Cost & Schedule</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-field')}>📝 Field Reports</span>
+            <span className="doc-jump-chip" onClick={()=>scrollTo('sec-dict-beds')}>🛏️ Camp Bed Fields</span>
+          </>
+        )}
+      </div>
+
+      {/* Print-only Header */}
+      <div className="print-only-header">
+        <div style={{fontFamily:'Oswald', fontSize:22, fontWeight:700}}>SITE PMIS — OPERATIONAL MANUAL & FIELD REFERENCE GUIDE</div>
+        <div style={{fontSize:11, color:'#555', marginTop:2}}>Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Grounded in DOLE & Mine Safety Standards · Printable Document</div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* PART I: EARLY WARNING & RISK SYSTEM GUIDE                 */}
+      {/* ========================================================= */}
+      {(docTab==='all' || docTab==='guide') && (
+        <div style={{marginBottom:32}}>
+          <div className="panel" id="sec-rule-summary" style={{marginBottom:18}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title" style={{fontSize:18, color:'var(--amber)'}}>📘 Part I: Early Warning & Risk System Guide</div>
+                <div className="panel-sub">7 rule-based operational warnings designed to protect project schedules, budgets, and workforce safety</div>
+              </div>
+            </div>
+
+            {match('summary delayed weather must order cert fuel budget camp bed') && (
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Warning Rule</th>
+                      <th>Module in App</th>
+                      <th>Severity</th>
+                      <th>When Does It Trigger?</th>
+                      <th>Impact on Project</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><b>1. Delayed Shipment</b></td>
+                      <td>🚚 Transport & Cost</td>
+                      <td><span className="badge delayed">⛔ Critical</span></td>
+                      <td>Cargo unarrived past Expected Date + Grace Period (2 days).</td>
+                      <td>Work depending on materials halted.</td>
+                    </tr>
+                    <tr>
+                      <td><b>2. Route Weather Alert</b></td>
+                      <td>🚚 Transport & Cost</td>
+                      <td><span className="badge delayed">⛔ Critical</span> / <span className="badge watch">⚠ Warning</span></td>
+                      <td>Corridor marked "Delayed" (typhoon/port shut) or "Watch".</td>
+                      <td>Barges & trucks stranded; shift rotation disrupted.</td>
+                    </tr>
+                    <tr>
+                      <td><b>3. Must-Order-By Passed</b></td>
+                      <td>📦 Procurement</td>
+                      <td><span className="badge delayed">⛔ Critical</span></td>
+                      <td>Today's date past calculated Must-Order-By Date & PO not placed.</td>
+                      <td>Materials arrive late, causing site stoppage.</td>
+                    </tr>
+                    <tr>
+                      <td><b>4. Expiring Certification</b></td>
+                      <td>👥 Workforce</td>
+                      <td><span className="badge delayed">⛔ Critical</span> / <span className="badge watch">⚠ Warning</span></td>
+                      <td>Safety/equipment license expires in ≤7 days (Crit) or ≤30 days (Warn).</td>
+                      <td>Worker legally disqualified from heavy machinery.</td>
+                    </tr>
+                    <tr>
+                      <td><b>5. Low Fuel Stock</b></td>
+                      <td>⛽ Transport & Cost</td>
+                      <td><span className="badge delayed">⛔ Critical</span> / <span className="badge watch">⚠ Warning</span></td>
+                      <td>Site diesel tank autonomy down to ≤3 days (Crit) or ≤7 days (Warn).</td>
+                      <td>Power generators and excavators run out of fuel.</td>
+                    </tr>
+                    <tr>
+                      <td><b>6. Budget Cost Overrun</b></td>
+                      <td>💰 Cost & Schedule</td>
+                      <td><span className="badge watch">⚠ Warning</span></td>
+                      <td>Committed + In Transit + Installed exceeds approved Budget.</td>
+                      <td>Activity is losing money; erodes contingency.</td>
+                    </tr>
+                    <tr>
+                      <td><b>7. Camp Bed Road Delay</b></td>
+                      <td>👥 Workforce / Beds</td>
+                      <td><span className="badge delayed">⛔ Critical</span> / <span className="badge watch">⚠ Warning</span></td>
+                      <td>Muddy road delay extends stay (+24h) or same-day shift handover.</td>
+                      <td>Prevents hot-bedding and keeps stranded crew housed.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Rule 1 */}
+          {match('rule 1 delayed shipment checkpoint expected date grace period cargo') && (
+            <div className="doc-rule-card critical" id="sec-rule-1">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 1: Delayed Shipment Behind Checkpoint</div>
+                <span className="badge delayed">⛔ Critical</span>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Cargo / Material · Expected Date · Status (In Transit / At Checkpoint) · Grace Period (2 days) · Linked Activity
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> Turns <b>RED</b> when cargo is still marked <i>In Transit</i> or <i>At Checkpoint</i> and calendar is past <b>Expected Date by &gt;2 days</b>.
+              </div>
+              <div className="doc-box example">
+                <b>Plain Example:</b> Expected arrival Aug 20 + 2 days buffer = Aug 22. On Aug 23, if still in transit, alert triggers and highlights linked activity (e.g. <i>Primary Crusher Mechanical Erection</i>).
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> 1. Contact shipping agent for barge coordinates · 2. Re-sequence downstream labor crews to prevent paid standby hours.
+              </div>
+            </div>
+          )}
+
+          {/* Rule 2 */}
+          {match('rule 2 route weather alert watch delayed typhoon port closure') && (
+            <div className="doc-rule-card critical" id="sec-rule-2">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 2: Route Weather Alert</div>
+                <div>
+                  <span className="badge delayed" style={{marginRight:4}}>⛔ Critical</span>
+                  <span className="badge watch">⚠ Warning</span>
+                </div>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Weather (None / Watch / Delayed) · Route Corridor · Leg Mode (Truck / Barge / Final-Mile)
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> ⛔ Critical when route is marked <b>"Delayed"</b> (Typhoon signal, port closure, landslide). ⚠ Warning when on <b>"Watch"</b> (Gale warning within 24–48h).
+              </div>
+              <div className="doc-box example">
+                <b>Site Impact:</b> Sea barges anchor incurring demurrage fees; personnel awaiting shift rotations become stranded in port cities.
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Hold sensitive cargo at secure regional hubs and arrange temporary hotel lodging for stranded personnel at transit ports.
+              </div>
+            </div>
+          )}
+
+          {/* Rule 3 */}
+          {match('rule 3 must order by lead time supplier transport buffer purchase order') && (
+            <div className="doc-rule-card critical" id="sec-rule-3">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 3: Must-Order-By Date Passed (Procurement Lead Time)</div>
+                <span className="badge delayed">⛔ Critical</span>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Item · Need By Date · Supplier Lead (d) · Transport Lead (d) · Buffer Days · Status
+              </div>
+              <div className="doc-box formula">
+                📐 Must-Order-By Date = Need By Date − (Supplier Lead + Transport Lead + Buffer Days)
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> Turns <b>RED</b> when today's calendar date is past the Must-Order-By Date and status is not yet <i>Ordered</i>.
+              </div>
+              <div className="doc-box example">
+                <b>Plain Example:</b> Need steel plates Dec 1. Lead time = 30d fabrication + 15d transport + 5d buffer = 50d. Must-Order-By is Oct 12. On Oct 13, system triggers emergency alert.
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Release PO to Primary Supplier immediately, or switch to the Backup Supplier in the Supplier Directory.
+              </div>
+            </div>
+          )}
+
+          {/* Rule 4 */}
+          {match('rule 4 expiring worker certification license dole tesda operator') && (
+            <div className="doc-rule-card critical" id="sec-rule-4">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 4: Expiring Worker Certification</div>
+                <div>
+                  <span className="badge delayed" style={{marginRight:4}}>⛔ Critical</span>
+                  <span className="badge watch">⚠ Warning</span>
+                </div>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Worker · Trade / Role · Certification · Cert Expiry Date · Rotation Out Date
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> ⛔ Critical when cert expires in <b>≤7 days</b>. ⚠ Warning when cert expires in <b>8 to 30 days</b>.
+              </div>
+              <div className="doc-box example">
+                <b>Site Impact:</b> DOLE and Mine Safety rules prohibit uncertified operators from running cranes or heavy machinery, causing work stoppage.
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Verify if worker rotates off site before expiry date; book renewal training during rest cycle or dispatch certified backup.
+              </div>
+            </div>
+          )}
+
+          {/* Rule 5 */}
+          {match('rule 5 low fuel stock autonomy consumption burn rate tank') && (
+            <div className="doc-rule-card critical" id="sec-rule-5">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 5: Low Fuel Stock (Site Autonomy Depletion)</div>
+                <div>
+                  <span className="badge delayed" style={{marginRight:4}}>⛔ Critical</span>
+                  <span className="badge watch">⚠ Warning</span>
+                </div>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Current Fuel Stock (L) · Fuel Consumption Log · Average Daily Burn Rate (L/day)
+              </div>
+              <div className="doc-box formula">
+                📐 Days of Fuel Remaining = Current Tank Stock (Liters) ÷ Average Daily Consumption (Liters/day)
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> ⛔ Critical when fuel runway is <b>≤3 days</b>. ⚠ Warning when runway is <b>4 to 7 days</b>.
+              </div>
+              <div className="doc-box example">
+                <b>Plain Example:</b> Tanks hold 28,000 L. Daily burn = 7,000 L/day. Runway = 4 days (&lt; 7-day safety threshold) → Fuel Warning triggered.
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Expedite fuel tanker delivery; initiate diesel conservation mode (shut off non-essential camp loads).
+              </div>
+            </div>
+          )}
+
+          {/* Rule 6 */}
+          {match('rule 6 activity budget cost overrun variance committed in transit installed') && (
+            <div className="doc-rule-card warning" id="sec-rule-6">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 6: Activity Budget Cost Overrun</div>
+                <span className="badge watch">⚠ Warning</span>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Activity · Cost Code · Budget · Committed · In Transit · Installed Spend
+              </div>
+              <div className="doc-box formula">
+                📐 Total Spend = Committed + In Transit + Installed &nbsp;|&nbsp; Variance = Budget − Total Spend
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> ⚠ Warning when <b>Total Spend exceeds Budget</b> (negative variance shown in red in the app).
+              </div>
+              <div className="doc-box example">
+                <b>Plain Example:</b> Budget ₱1,000,000. Total Spend = ₱1,100,000 (₱500k committed + ₱200k in transit + ₱400k installed). Over budget by ₱100,000.
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Audit contractor billings for unauthorized work and request a formal project management budget change order.
+              </div>
+            </div>
+          )}
+
+          {/* Rule 7 */}
+          {match('rule 7 camp bed road delay handover hot bedding housekeeping extension') && (
+            <div className="doc-rule-card critical" id="sec-rule-7">
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>Rule 7: Camp Bed Road Delay & Handover (Anti-Hot-Bedding)</div>
+                <div>
+                  <span className="badge delayed" style={{marginRight:4}}>⛔ Critical</span>
+                  <span className="badge watch">⚠ Warning</span>
+                </div>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>App Fields:</b> Room / Bed ID · Current Occupant · Vacating Date · Road Delay Extension (+24h) · Bed Status
+              </div>
+              <div style={{fontSize:13, marginBottom:8}}>
+                <b>When does it trigger?</b> ⛔ Critical when Road Delay (+24h) extends outbound resident stay. ⚠ Warning on same-day room handover turnover.
+              </div>
+              <div className="doc-box example">
+                <b>Site Impact:</b> Prevents unhousing outbound crew when roads are impassable and prevents hot-bedding (assigning dirty uncleaned rooms to arriving crew).
+              </div>
+              <div className="doc-box action">
+                <b>Action Required:</b> Follow 3-step turnover: 1. Send to Housekeeping (🔵) → 2. Sanitation Cleared (🟢) → 3. Check-In Inbound (🔴).
+              </div>
+            </div>
+          )}
+
+          {/* Attendance Bonus */}
+          {match('daily attendance time in time out shift hours workforce muster') && (
+            <div className="doc-rule-card" id="sec-rule-attendance" style={{borderLeftColor:'var(--steel)'}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+                <div style={{fontFamily:'Oswald', fontSize:17, fontWeight:600}}>📅 Reference: Daily Attendance & Time Tracking</div>
+                <span className="badge ordered">Workforce Module</span>
+              </div>
+              <div style={{fontSize:13, color:'var(--text-dim)', marginBottom:8}}>
+                <b>Features:</b> Date selector (Today / Yesterday / Calendar) · Status (🟢 Present, 🟡 Late, 🔴 Absent, ⚪ Off Rotation) · Clock In/Out times · Automated shift hours calculation (<code>Time Out − Time In</code>).
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* PART II: COMPLETE FIELD REFERENCE DICTIONARY              */}
+      {/* ========================================================= */}
+      {(docTab==='all' || docTab==='dict') && (
+        <div>
+          <div className="panel" style={{marginBottom:18}}>
+            <div className="panel-head">
+              <div>
+                <div className="panel-title" style={{fontSize:18, color:'var(--amber)'}}>📋 Part II: Complete Field Reference Dictionary</div>
+                <div className="panel-sub">Complete field-by-field definitions, example values, and operational significance across all screens</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 1. Procurement */}
+          {match('procurement item supplier qty unit cost lead buffer need by must order status') && (
+            <div className="panel" id="sec-dict-proc">
+              <div className="panel-title" style={{marginBottom:12}}>1. 📦 Procurement Screen (Materials & Ordering)</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Item</b></td><td>Equipment or material description.</td><td><code>Cone Crusher Liners</code></td><td>Identifies physical part needed.</td></tr>
+                    <tr><td><b>Supplier</b></td><td>Vendor supplying the item.</td><td><code>Metso Outotec Phils</code></td><td>Tracks vendor and performance.</td></tr>
+                    <tr><td><b>Qty</b></td><td>Total units required.</td><td><code>4</code></td><td>Determines purchase & freight volume.</td></tr>
+                    <tr><td><b>Unit Cost</b></td><td>Purchase price per unit in PHP.</td><td><code>₱250,000</code></td><td>Calculates total procurement spend.</td></tr>
+                    <tr><td><b>Supplier Lead (d)</b></td><td>Factory manufacturing duration in days.</td><td><code>45</code></td><td>Back-calculates PO order deadline.</td></tr>
+                    <tr><td><b>Transport Lead (d)</b></td><td>Transit days to remote site.</td><td><code>15</code></td><td>Accounts for shipping durations.</td></tr>
+                    <tr><td><b>Buffer (d)</b></td><td>Safety days for customs & weather holds.</td><td><code>7</code></td><td>Prevents late deliveries.</td></tr>
+                    <tr><td><b>Need By</b></td><td>Site laydown required arrival date.</td><td><code>Nov 30, 2026</code></td><td>Tied to construction start date.</td></tr>
+                    <tr><td><b>Must Order By</b></td><td><i>Calculated</i>: <code>Need By − Lead Times</code></td><td><code>Sep 23, 2026</code></td><td>Cutoff date to place PO without delay.</td></tr>
+                    <tr><td><b>Status</b></td><td>Milestone stage along supply chain.</td><td><code>Ordered, Hub, Port, Site</code></td><td>Shows physical location of cargo.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 2. Suppliers */}
+          {match('supplier database tier primary backup lead reliability route category') && (
+            <div className="panel" id="sec-dict-supp">
+              <div className="panel-title" style={{marginBottom:12}}>2. 🏢 Supplier Database Screen</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Supplier</b></td><td>Official vendor name.</td><td><code>Apex Industrial Steel</code></td><td>Identifies commercial partner.</td></tr>
+                    <tr><td><b>Item Category</b></td><td>Category of items supplied.</td><td><code>Grinding Media</code></td><td>Filters vendors by product category.</td></tr>
+                    <tr><td><b>Tier</b></td><td>Primary (standard) or Backup (emergency).</td><td><code>Primary / Backup</code></td><td>Enables quick backup switching.</td></tr>
+                    <tr><td><b>Avg Lead (d)</b></td><td>Historical days from PO to dispatch.</td><td><code>30</code></td><td>Benchmarks vendor timeliness.</td></tr>
+                    <tr><td><b>Reliability %</b></td><td>On-time fulfillment percentage.</td><td><code>95%</code></td><td>Measures vendor reliability.</td></tr>
+                    <tr><td><b>Primary Route</b></td><td>Standard transit corridor.</td><td><code>Manila to Surigao Port</code></td><td>Coordinates freight logistics.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 3. Transport */}
+          {match('transport freight landed cost demurrage handling insurance weather route shipment') && (
+            <div className="panel" id="sec-dict-trans">
+              <div className="panel-title" style={{marginBottom:12}}>3. 🚚 Transport & Cost Screen (Shipments & Landed Cost)</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Material / Cargo</b></td><td>Cargo item description.</td><td><code>Ball Mill Shell Liners</code></td><td>Identifies physical shipment.</td></tr>
+                    <tr><td><b>Route</b></td><td>Transit path from origin to site.</td><td><code>Cebu → Lipata → Site</code></td><td>Defines checkpoints & corridors.</td></tr>
+                    <tr><td><b>Current Leg Mode</b></td><td>Active method (Truck/Barge/Final-Mile).</td><td><code>Barge/Boat</code></td><td>Tracks road vs sea transit risks.</td></tr>
+                    <tr><td><b>Status</b></td><td>Leg stage (In Transit / Delivered).</td><td><code>In Transit</code></td><td>Triggers overdue shipment flags.</td></tr>
+                    <tr><td><b>Expected / Actual</b></td><td>Target vs real arrival dates.</td><td><code>Aug 20 / Aug 22</code></td><td>Measures shipping punctuality.</td></tr>
+                    <tr><td><b>Weather</b></td><td>Weather flag (None / Watch / Delayed).</td><td><code>Watch / Delayed</code></td><td>Warns of typhoons and road mud.</td></tr>
+                    <tr><td><b>Freight / Surcharges</b></td><td>Base freight + fuel index fee.</td><td><code>₱120,000 / ₱15,000</code></td><td>Direct carrier charges.</td></tr>
+                    <tr><td><b>Demurrage / Handling</b></td><td>Standby penalties & port terminal fees.</td><td><code>₱25,000 / ₱18,000</code></td><td>Measures delay costs & rigging.</td></tr>
+                    <tr><td><b>Landed Cost</b></td><td><i>Calculated</i>: Total delivered cost.</td><td><code>₱186,000</code></td><td>True landed cost on remote site.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 4. Fuel */}
+          {match('fuel stock diesel consumption delivery liters burn tank threshold') && (
+            <div className="panel" id="sec-dict-fuel">
+              <div className="panel-title" style={{marginBottom:12}}>4. ⛽ Fuel Sub-Ledger Screen</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Date / Type</b></td><td>Log date & Delivery or Consumption.</td><td><code>Aug 28 / Consumption</code></td><td>Maintains burn rate history.</td></tr>
+                    <tr><td><b>Liters / Cost</b></td><td>Diesel volume & total delivery invoice.</td><td><code>6,500 L / ₱422,500</code></td><td>Tracks fuel drawdown & spend.</td></tr>
+                    <tr><td><b>Notes / Equipment</b></td><td>Machine fleet or generator ID.</td><td><code>GenSet #1 & Excavator</code></td><td>Identifies high fuel consumers.</td></tr>
+                    <tr><td><b>Current Fuel Stock</b></td><td>Live liters inside site tanks.</td><td><code>35,000 L</code></td><td>Computes days of remaining fuel.</td></tr>
+                    <tr><td><b>Alert Threshold</b></td><td>Safety runway before warning (Settings).</td><td><code>7 days</code></td><td>Prevents fuel tank exhaustion.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 5. Workforce */}
+          {match('workforce trade rotation cert expiry attendance time in time out hours') && (
+            <div className="panel" id="sec-dict-work">
+              <div className="panel-title" style={{marginBottom:12}}>5. 👥 Workforce Screen (Attendance & Certifications)</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Worker & Trade</b></td><td>Name and specialty role.</td><td><code>Juan Dela Cruz / Crane Op</code></td><td>Manning levels for critical tasks.</td></tr>
+                    <tr><td><b>Rotation In / Out</b></td><td>Tour arrival and fly-out dates.</td><td><code>Aug 15 / Aug 29</code></td><td>Plans shift change logistics.</td></tr>
+                    <tr><td><b>Cert & Cert Expiry</b></td><td>Safety license name & expiry date.</td><td><code>TESDA NC II / Sep 15</code></td><td>DOLE compliance & safety validity.</td></tr>
+                    <tr><td><b>Attendance Status</b></td><td>Presence (Present / Late / Absent).</td><td><code>Present</code></td><td>Daily shift muster log.</td></tr>
+                    <tr><td><b>Time In / Out / Hours</b></td><td>Clock times and shift duration.</td><td><code>07:00-17:00 (10.0h)</code></td><td>Labor productivity tracking.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 6. Cost & Schedule */}
+          {match('cost schedule budget committed in transit installed variance activity cost code') && (
+            <div className="panel" id="sec-dict-cost">
+              <div className="panel-title" style={{marginBottom:12}}>6. 💰 Cost & Schedule Screen (Budget vs Spend)</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Activity & Code</b></td><td>WBS task name & accounting code.</td><td><code>Primary Crusher Base (C-101)</code></td><td>Links field jobs to financials.</td></tr>
+                    <tr><td><b>Budget</b></td><td>Approved financial ceiling.</td><td><code>₱1,500,000</code></td><td>Baseline expenditure cap.</td></tr>
+                    <tr><td><b>Committed / In Transit</b></td><td>Signed contracts & freight spend.</td><td><code>₱600,000 / ₱250,000</code></td><td>Funds already committed or en route.</td></tr>
+                    <tr><td><b>Installed / Earned</b></td><td>Completed inspected work on site.</td><td><code>₱400,000</code></td><td>Earned value of physical progress.</td></tr>
+                    <tr><td><b>Total Spend / Variance</b></td><td><i>Calculated</i>: Total spent & delta to budget.</td><td><code>₱1.25M (Variance: +₱250k)</code></td><td>Detects budget cost overruns.</td></tr>
+                    <tr><td><b>Linked Shipment</b></td><td>Cargo shipment tied to this task.</td><td><code>Anchor Bolts</code></td><td>Links shipment delay to task delay.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 7. Field Reports */}
+          {match('field reports daily progress incident safety photos offline') && (
+            <div className="panel" id="sec-dict-field">
+              <div className="panel-title" style={{marginBottom:12}}>7. 📝 Field Reporting Screen</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>Date & Type</b></td><td>Report date & Progress/Incident/Safety.</td><td><code>Aug 28 / Progress</code></td><td>Classifies daily site entries.</td></tr>
+                    <tr><td><b>Description</b></td><td>Field notes and conditions.</td><td><code>Completed rebar tying.</code></td><td>Captures qualitative field intel.</td></tr>
+                    <tr><td><b>Photos</b></td><td>Mobile camera photo uploads.</td><td><code>[2 images]</code></td><td>Visual evidence of progress/hazards.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 8. Camp Beds */}
+          {match('camp bed room bed occupant shift vacating status housekeeping handover delay extension') && (
+            <div className="panel" id="sec-dict-beds">
+              <div className="panel-title" style={{marginBottom:12}}>8. 🛏️ Camp Bed Matrix Screen</div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Field Name</th><th>What Does It Mean?</th><th>Example</th><th>Why Is It Important?</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><b>ROOM / BED ID</b></td><td>Camp room and bunk identifier.</td><td><code>MH-A-01</code></td><td>Pinpoints physical bed location.</td></tr>
+                    <tr><td><b>CURRENT OCCUPANT</b></td><td>Worker assigned or Vacant.</td><td><code>Juan Dela Cruz</code></td><td>Identifies active resident.</td></tr>
+                    <tr><td><b>VACATING DATE</b></td><td>Scheduled departure (+24h if delayed).</td><td><code>Aug 29, 2026</code></td><td>Coordinates handover timing.</td></tr>
+                    <tr><td><b>NEXT OCCUPANT</b></td><td>Inbound technician reserved for bed.</td><td><code>Mark Santos</code></td><td>Coordinates crew turnover.</td></tr>
+                    <tr><td><b>BED STATUS</b></td><td>🔴 Occupied, 🟡 Pending, 🔵 Clean, 🟢 Free.</td><td><code>🟡 Pending Handover</code></td><td>Prevents uncleaned double booking.</td></tr>
+                    <tr><td><b>Road Delay Ext</b></td><td>+24h stay extension for convoy delays.</td><td><code>+24h Ext</code></td><td>Protects stranded crew housing.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Print Footer */}
+      <div className="print-only-footer">
+        SITE PMIS — Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Operations Manual & Field Reference Dictionary · Printed Copy
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Landing Portal Component (Worker & Admin Selector) ---------- */
+function LandingPortal({onSelectWorker, onSelectAdmin}){
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  const handleAdminSubmit = (e) => {
+    e.preventDefault();
+    const clean = password.trim();
+    // Acceptable default administrative passwords
+    if(clean === 'admin' || clean === 'siteadmin2026' || clean === 'admin123' || clean === '123456'){
+      setErrorMsg(null);
+      setShowAdminModal(false);
+      onSelectAdmin();
+    } else {
+      setErrorMsg('Incorrect administrator password. Please try again.');
+    }
+  };
+
+  return (
+    <div className="portal-bg">
+      <div className="portal-container">
+        {/* Header Branding */}
+        <div className="portal-header">
+          <div className="portal-brand">
+            <span className="dot"></span>
+            SITE PMIS
+          </div>
+          <div className="portal-location">
+            Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines
+          </div>
+          <div className="portal-subtitle">
+            Select your portal to continue
+          </div>
+        </div>
+
+        {/* Dual Portal Selection Cards (Simple Clean Design) */}
+        <div className="portal-grid">
+          {/* 1. Field Worker Portal */}
+          <div className="portal-card worker" onClick={onSelectWorker} style={{cursor:'pointer'}}>
+            <div className="portal-card-head">
+              <div className="portal-icon" style={{color:'var(--amber)'}}>👷</div>
+              <span className="portal-badge open">Instant Access</span>
+            </div>
+            <div className="portal-card-title">Field Worker</div>
+            <div className="portal-card-desc">
+              Access operational dashboard, daily shift attendance logging, workforce roster, and early warning risk alerts.
+            </div>
+            <button className="portal-btn worker" onClick={(e)=>{ e.stopPropagation(); onSelectWorker(); }}>
+              Enter as Worker →
+            </button>
+          </div>
+
+          {/* 2. Project Administrator Portal */}
+          <div className="portal-card admin" onClick={()=>{ setPassword(''); setErrorMsg(null); setShowAdminModal(true); }} style={{cursor:'pointer'}}>
+            <div className="portal-card-head">
+              <div className="portal-icon" style={{color:'#9DBBE0'}}>👑</div>
+              <span className="portal-badge locked">Password Protected</span>
+            </div>
+            <div className="portal-card-title">Project Administrator</div>
+            <div className="portal-card-desc">
+              Full project governance, financial budgets, procurement, multi-modal transport ledger, and all 8 modules.
+            </div>
+            <button className="portal-btn admin" onClick={(e)=>{ e.stopPropagation(); setPassword(''); setErrorMsg(null); setShowAdminModal(true); }}>
+              Administrator Login →
+            </button>
+          </div>
+        </div>
+
+        {/* Footer Info */}
+        <div style={{textAlign:'center', fontSize:12, color:'var(--text-dim)'}}>
+          Offline-First Mining Operations Management · Auto-syncs with Cloud Database
+        </div>
+      </div>
+
+      {/* Admin Password Authentication Modal */}
+      {showAdminModal && (
+        <div className="modal-overlay" onClick={(e)=>{ if(e.target===e.currentTarget) setShowAdminModal(false); }}>
+          <div className="modal" style={{maxWidth:380}}>
+            <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:16}}>
+              <div style={{fontSize:26, background:'var(--surface2)', padding:'8px 12px', borderRadius:8, border:'1px solid var(--border)'}}>👑</div>
+              <div>
+                <div className="modal-title" style={{marginBottom:2}}>Administrator Login</div>
+                <div style={{fontSize:12, color:'var(--text-dim)'}}>Enter administrator password to continue</div>
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminSubmit}>
+              <div className="field" style={{marginBottom: errorMsg ? 10 : 18}}>
+                <label>Password</label>
+                <div className="password-wrap">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password"
+                    value={password}
+                    autoFocus
+                    required
+                    onChange={e=>{ setPassword(e.target.value); setErrorMsg(null); }}
+                    style={{paddingRight:36}}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={()=>setShowPassword(!showPassword)}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? '👁️‍🗨️' : '👁️'}
+                  </button>
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div style={{background:'rgba(196,67,43,0.15)', border:'1px solid var(--rust)', color:'#F2C4B8', padding:'8px 12px', borderRadius:6, fontSize:12, marginBottom:16}}>
+                  ⚠️ {errorMsg}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button type="button" className="btn secondary" onClick={()=>setShowAdminModal(false)}>Cancel</button>
+                <button type="submit" className="btn" style={{background:'var(--steel)', color:'#fff'}}>
+                  Login →
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- shell ---------- */
-const TABS = [
+const WORKER_TABS = [
+  {id:'dashboard', num:'1', label:'Dashboard'},
+  {id:'workforce', num:'2', label:'Workforce'},
+  {id:'earlywarning', num:'3', label:'Early Warning'},
+];
+
+const ADMIN_TABS = [
   {id:'dashboard', num:'—', label:'Dashboard'},
   {id:'procurement', num:'2', label:'Procurement'},
   {id:'transport', num:'3–4', label:'Transport & Cost'},
@@ -2416,10 +3485,12 @@ const TABS = [
   {id:'costschedule', num:'6', label:'Cost & Schedule'},
   {id:'earlywarning', num:'7', label:'Early Warning'},
   {id:'field', num:'8', label:'Field Reports'},
+  {id:'docs', num:'9', label:'Docs & Manuals'},
 ];
 
 function App(){
   const {data, mutate, mutateSettings, syncedAt, saving, error, reload, online, queueCount, syncing} = useStore();
+  const [role, setRole] = useState(() => localStorage.getItem('pmis_current_role') || null);
   const [tab, setTab] = useState('dashboard');
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -2452,6 +3523,16 @@ function App(){
     };
   },[]);
 
+  const handleSelectRole = (r) => {
+    setRole(r);
+    if(r){
+      localStorage.setItem('pmis_current_role', r);
+      setTab('dashboard');
+    } else {
+      localStorage.removeItem('pmis_current_role');
+    }
+  };
+
   const handleInstallClick = async () => {
     if(installPrompt){
       installPrompt.prompt();
@@ -2461,10 +3542,18 @@ function App(){
       }
       setInstallPrompt(null);
     } else {
-      // If iOS or browser without direct prompt API, show tailored step-by-step modal
       setShowInstallModal(true);
     }
   };
+
+  if(!role){
+    return (
+      <LandingPortal
+        onSelectWorker={()=>handleSelectRole('worker')}
+        onSelectAdmin={()=>handleSelectRole('admin')}
+      />
+    );
+  }
 
   if(error && !data){
     return (
@@ -2475,7 +3564,10 @@ function App(){
           Double-check the SUPABASE_URL / SUPABASE_ANON_KEY constants near the top of the script,
           and that the schema SQL has been run in your Supabase project.
         </div>
-        <button className="btn" onClick={reload}>Retry</button>
+        <div style={{display:'flex', gap:10}}>
+          <button className="btn" onClick={reload}>Retry</button>
+          <button className="btn secondary" onClick={()=>handleSelectRole(null)}>Return to Role Portal</button>
+        </div>
       </div>
     );
   }
@@ -2489,14 +3581,29 @@ function App(){
   const critCount = alerts.filter(a=>a.severity==='critical').length;
   const warnCount = alerts.filter(a=>a.severity==='warning').length;
 
+  const tabs = role === 'worker' ? WORKER_TABS : ADMIN_TABS;
+
   const titleMap = {
-    dashboard:['Executive Dashboard','Cross-module status, generated on each sync'],
+    dashboard:[role==='worker' ? 'Field Operations Dashboard' : 'Executive Dashboard', role==='worker' ? 'Active site risks, material staging & shift attendance' : 'Cross-module status, generated on each sync'],
     procurement:['Procurement & Long-Lead-Time Materials','Lead-time-driven ordering and supplier tiering'],
     transport:['Transportation & Logistics Cost Control','Multi-modal tracking, landed cost, fuel sub-ledger'],
     workforce:['Workforce, Daily Attendance & Camp Bed Matrix','2-on/2-off rotation, muster logs, time tracking & room allocation'],
     costschedule:['Cost & Schedule Integration','Committed / in-transit / installed cost states'],
     earlywarning:['Early Warning / Risk Alerts','Rule-based automated flags, ranked by severity'],
     field:['Field Reporting','Offline-first daily entry, prioritized sync'],
+    docs:['Operational Manuals & Field Guides','Printable reference manuals, early warning rulebook & field dictionary'],
+  };
+
+  const handleNavigate = (targetTab) => {
+    if(role === 'worker'){
+      if(targetTab === 'workforce' || targetTab === 'earlywarning' || targetTab === 'dashboard'){
+        setTab(targetTab);
+      } else {
+        setTab('earlywarning');
+      }
+    } else {
+      setTab(targetTab);
+    }
   };
 
   return (
@@ -2504,10 +3611,10 @@ function App(){
       <div className="sidebar">
         <div className="brand">
           <div className="brand-mark"><span className="dot"></span>SITE PMIS</div>
-          <div className="brand-sub">Remote Mining Camp situated in Brgy. Bolhoon, San miguel, Surigao Del Sur, Philippines</div>
+          <div className="brand-sub">Brgy. Bolhoon, San Miguel, Surigao Del Sur</div>
         </div>
         <div className="nav">
-          {TABS.map(t=>(
+          {tabs.map(t=>(
             <div key={t.id} className={"nav-item "+(tab===t.id?'active':'')} onClick={()=>setTab(t.id)}>
               <span className="nav-num">{t.num}</span>
               <span>{t.label}</span>
@@ -2516,6 +3623,14 @@ function App(){
           ))}
         </div>
         <div className="sidebar-foot">
+          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10}}>
+            <span style={{fontSize:11, color:'var(--text-dim)', fontWeight:600}}>
+              {role === 'worker' ? '👷 Worker Mode' : '👑 Admin Mode'}
+            </span>
+            <button className="role-switch-btn" onClick={()=>handleSelectRole(null)} title="Switch Role">
+              Switch
+            </button>
+          </div>
           {!installed && (
             <button className="install-btn" style={{width:'100%', justifyContent:'center', marginBottom:8}} onClick={handleInstallClick}>
               ⬇ Install Mobile App
@@ -2528,10 +3643,20 @@ function App(){
       <div className="main">
         <div className="topbar">
           <div>
-            <div className="topbar-title">{titleMap[tab][0]}</div>
-            <div className="topbar-sub">{titleMap[tab][1]}</div>
+            <div className="topbar-title">{titleMap[tab] ? titleMap[tab][0] : 'Site PMIS'}</div>
+            <div className="topbar-sub">{titleMap[tab] ? titleMap[tab][1] : ''}</div>
           </div>
           <div className="pulse-strip">
+            <div style={{display:'flex', alignItems:'center', gap:8}}>
+              {role === 'worker' ? (
+                <span className="role-indicator worker">👷 Field Worker</span>
+              ) : (
+                <span className="role-indicator admin">👑 Administrator</span>
+              )}
+              <button className="role-switch-btn" onClick={()=>handleSelectRole(null)} title="Return to Role Portal">
+                🚪 Switch Portal
+              </button>
+            </div>
             {critCount>0 && <div className="pulse-chip critical"><span className="pulse-dot critical"></span>{critCount} critical</div>}
             {warnCount>0 && <div className="pulse-chip warning"><span className="pulse-dot warning"></span>{warnCount} warning</div>}
             {alerts.length===0 && <div className="pulse-chip"><span className="pulse-dot ok"></span>nominal</div>}
@@ -2548,13 +3673,14 @@ function App(){
           </div>
         </div>
         <div className="content">
-          {tab==='dashboard' && <Dashboard data={data} alerts={alerts_sorted} onNavigate={setTab} />}
-          {tab==='procurement' && <Procurement data={data} mutate={mutate} />}
-          {tab==='transport' && <Transportation data={data} mutate={mutate} mutateSettings={mutateSettings} />}
-          {tab==='workforce' && <Workforce data={data} mutate={mutate} />}
-          {tab==='costschedule' && <CostSchedule data={data} mutate={mutate} />}
-          {tab==='earlywarning' && <EarlyWarning alerts={alerts_sorted} onNavigate={setTab} />}
-          {tab==='field' && <FieldReporting data={data} mutate={mutate} />}
+          {tab==='dashboard' && <Dashboard data={data} alerts={alerts_sorted} onNavigate={handleNavigate} role={role} />}
+          {tab==='procurement' && role==='admin' && <Procurement data={data} mutate={mutate} />}
+          {tab==='transport' && role==='admin' && <Transportation data={data} mutate={mutate} mutateSettings={mutateSettings} />}
+          {tab==='workforce' && <Workforce data={data} mutate={mutate} role={role} />}
+          {tab==='costschedule' && role==='admin' && <CostSchedule data={data} mutate={mutate} />}
+          {tab==='earlywarning' && <EarlyWarning alerts={alerts_sorted} onNavigate={handleNavigate} />}
+          {tab==='field' && role==='admin' && <FieldReporting data={data} mutate={mutate} />}
+          {tab==='docs' && role==='admin' && <DocsManual onNavigate={handleNavigate} />}
         </div>
       </div>
 
