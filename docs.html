@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#17140F">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
   :root {
@@ -616,7 +617,7 @@
   <div class="control-right">
     <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search rules, fields…" oninput="filterContent(this.value)">
     <button class="btn secondary" onclick="toggleTheme()" id="themeBtn" title="Toggle Light / Dark Mode">🌓 Theme</button>
-    <button class="btn" onclick="window.print()" title="Save as PDF">
+    <button class="btn" id="savePdfBtn" onclick="saveAsPdf()" title="Directly download PDF file">
       📥 Save as PDF
     </button>
     <a href="index.html" class="btn secondary" title="Back to main app">⌂ Main App</a>
@@ -1660,6 +1661,49 @@
   const savedTheme = localStorage.getItem('site_pmis_docs_theme');
   if (savedTheme) {
     document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  // Direct PDF Download / Generation using html2pdf with fallback to print dialog
+  async function saveAsPdf() {
+    const btn = document.getElementById('savePdfBtn');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '⏳ Generating PDF...';
+      btn.disabled = true;
+    }
+
+    if (typeof html2pdf !== 'undefined') {
+      const element = document.querySelector('.doc-container');
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     'Site_PMIS_Operations_Manual_and_Dictionary.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      try {
+        await html2pdf().set(opt).from(element).save();
+        if (btn) {
+          btn.innerHTML = '✅ Downloaded!';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }, 2000);
+        }
+        return;
+      } catch (err) {
+        console.warn('html2pdf generation error, falling back to print dialog:', err);
+      }
+    }
+
+    // Fallback to browser print/PDF dialog if html2pdf is unavailable
+    window.print();
+    if (btn) {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
   }
 </script>
 
