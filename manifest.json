@@ -1,7 +1,7 @@
 {
-  "name": "Site PMIS — Remote Mining Facility",
+  "name": "Site PMIS — Remote Mining Camp (Brgy. Bolhoon, San Miguel, Surigao Del Sur)",
   "short_name": "Site PMIS",
-  "description": "Offline-first project management for a remote mining processing facility",
+  "description": "Offline-first project management for Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines",
   "start_url": "./index.html",
   "scope": "./",
   "id": "site-pmis-app",
