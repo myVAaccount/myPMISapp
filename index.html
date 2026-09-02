@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <!-- Android & PWA settings -->
 <link rel="manifest" href="manifest.json">
@@ -2794,6 +2795,34 @@ function DocsManual({onNavigate}){
   const q = query.toLowerCase().trim();
   const match = (text) => !q || (text || '').toLowerCase().includes(q);
 
+  const [isExporting, setIsExporting] = React.useState(false);
+
+  const handleSavePdf = async () => {
+    if (typeof window.html2pdf !== 'undefined') {
+      setIsExporting(true);
+      const targetElement = document.getElementById('pmis-doc-content-root');
+      if (targetElement) {
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: 'Site_PMIS_Operations_Manual_and_Dictionary.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+        try {
+          await window.html2pdf().set(opt).from(targetElement).save();
+          setIsExporting(false);
+          return;
+        } catch (err) {
+          console.warn('html2pdf failed, falling back to print dialog:', err);
+          setIsExporting(false);
+        }
+      }
+    }
+    window.print();
+  };
+
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
@@ -2820,10 +2849,10 @@ function DocsManual({onNavigate}){
             value={query}
             onChange={e=>setQuery(e.target.value)}
           />
-          <button className="btn" onClick={()=>window.print()} title="Print or save as PDF">
-            🖨️ Print
+          <button className="btn" onClick={handleSavePdf} disabled={isExporting} title="Directly generate and download PDF document">
+            {isExporting ? '⏳ Generating PDF…' : '📥 Save as PDF'}
           </button>
-          <a href="docs.html" target="_blank" rel="noopener noreferrer" className="btn secondary" title="Open standalone printable page">
+          <a href="docs.html" target="_blank" rel="noopener noreferrer" className="btn secondary" title="Open standalone docs page">
             ↗ Open Standalone Page
           </a>
         </div>
@@ -2859,10 +2888,11 @@ function DocsManual({onNavigate}){
         )}
       </div>
 
-      {/* Print-only Header */}
-      <div className="print-only-header">
+      <div id="pmis-doc-content-root">
+        {/* PDF / Print Header */}
+        <div className="print-only-header">
         <div style={{fontFamily:'Oswald', fontSize:22, fontWeight:700}}>SITE PMIS — OPERATIONAL MANUAL & FIELD REFERENCE GUIDE</div>
-        <div style={{fontSize:11, color:'#555', marginTop:2}}>Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Grounded in DOLE & Mine Safety Standards · Printable Document</div>
+        <div style={{fontSize:11, color:'#555', marginTop:2}}>Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Grounded in DOLE & Mine Safety Standards · Reference Document</div>
       </div>
 
       {/* ========================================================= */}
@@ -3330,9 +3360,10 @@ function DocsManual({onNavigate}){
         </div>
       )}
 
-      {/* Print Footer */}
-      <div className="print-only-footer">
-        SITE PMIS — Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Operations Manual & Field Reference Dictionary · Printed Copy
+        {/* PDF Footer */}
+        <div className="print-only-footer">
+          SITE PMIS — Remote Mining Camp situated in Brgy. Bolhoon, San Miguel, Surigao Del Sur, Philippines · Operations Manual & Field Reference Dictionary · PDF Document
+        </div>
       </div>
     </div>
   );
@@ -3591,7 +3622,7 @@ function App(){
     costschedule:['Cost & Schedule Integration','Committed / in-transit / installed cost states'],
     earlywarning:['Early Warning / Risk Alerts','Rule-based automated flags, ranked by severity'],
     field:['Field Reporting','Offline-first daily entry, prioritized sync'],
-    docs:['Operational Manuals & Field Guides','Printable reference manuals, early warning rulebook & field dictionary'],
+    docs:['Operational Manuals & Field Guides','Reference manuals, early warning rulebook & field dictionary with PDF export'],
   };
 
   const handleNavigate = (targetTab) => {
