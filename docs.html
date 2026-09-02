@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Site PMIS — Operational Manual & Field Reference Dictionary</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17140F">
+
+<style>
+  :root {
+    --bg: #17140F;
+    --surface: #221D17;
+    --surface2: #2B241C;
+    --border: #3D342A;
+    --text: #F3ECDF;
+    --text-dim: #A99A85;
+    --amber: #E8871E;
+    --amber-dim: #7A4D18;
+    --rust: #C4432B;
+    --olive: #7A9070;
+    --steel: #5C8AA6;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Oswald', sans-serif;
+    --body: 'Inter', sans-serif;
+    --card-bg: #221D17;
+    --table-header-bg: #2B241C;
+    --table-stripe: rgba(255,255,255,0.02);
+    --code-bg: #13100C;
+  }
+
+  [data-theme="light"] {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #EFECE4;
+    --border: #D8D2C4;
+    --text: #1F1C18;
+    --text-dim: #6E6659;
+    --amber: #C76E0E;
+    --amber-dim: #E8C89E;
+    --rust: #B8321B;
+    --olive: #4A6E40;
+    --steel: #3D6C8A;
+    --card-bg: #FFFFFF;
+    --table-header-bg: #EAE5D9;
+    --table-stripe: #F9F8F5;
+    --code-bg: #F0EDE6;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    line-height: 1.6;
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  /* ---------- Sticky Action / Control Bar ---------- */
+  .control-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  .control-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .brand-tag {
+    font-family: var(--disp);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+  }
+
+  .nav-pills {
+    display: flex;
+    gap: 6px;
+    background: var(--surface2);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .nav-pill {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .nav-pill:hover { color: var(--text); }
+  .nav-pill.active {
+    background: var(--surface);
+    color: var(--amber);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .control-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-family: var(--body);
+    width: 200px;
+    transition: border-color 0.15s, width 0.2s;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--amber);
+    width: 240px;
+  }
+
+  .btn {
+    background: var(--amber);
+    color: #1A1305;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: var(--body);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:hover { background: #f5952b; transform: translateY(-1px); }
+  .btn.secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.secondary:hover { border-color: var(--text-dim); }
+
+  /* ---------- Document Layout ---------- */
+  .doc-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 36px 24px 80px 24px;
+  }
+
+  .doc-header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+
+  .doc-title {
+    font-family: var(--disp);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .doc-subtitle {
+    font-size: 15px;
+    color: var(--text-dim);
+    margin: 0 0 16px 0;
+    font-style: italic;
+  }
+  .doc-meta {
+    display: flex;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+  }
+  .doc-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Table of Contents */
+  .toc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 36px;
+  }
+  .toc-title {
+    font-family: var(--disp);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px 16px;
+  }
+  .toc-link {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    transition: color 0.15s;
+  }
+  .toc-link:hover { color: var(--amber); }
+
+  /* Sections */
+  .section-block {
+    margin-bottom: 48px;
+    scroll-margin-top: 80px;
+  }
+
+  .section-heading {
+    font-family: var(--disp);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--text);
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Rule Cards */
+  .rule-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--amber);
+    transition: transform 0.1s;
+  }
+  .rule-card.critical { border-left-color: var(--rust); }
+  .rule-card.warning { border-left-color: var(--amber); }
+
+  .rule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .rule-title {
+    font-family: var(--disp);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .rule-subheading {
+    font-family: var(--disp);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin: 14px 0 6px 0;
+  }
+
+  .field-list {
+    margin: 0 0 12px 0;
+    padding-left: 20px;
+    color: var(--text);
+  }
+  .field-list li {
+    margin-bottom: 4px;
+  }
+
+  /* Callout & Formula Box */
+  .callout-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  .callout-box.formula {
+    font-family: var(--mono);
+    background: var(--code-bg);
+    border-left: 3px solid var(--steel);
+    color: #CBE3F5;
+  }
+  [data-theme="light"] .callout-box.formula {
+    color: #174A6E;
+  }
+  .callout-box.example {
+    background: var(--surface2);
+    border-left: 3px solid var(--amber);
+  }
+  .callout-box.action {
+    background: var(--surface2);
+    border-left: 3px solid var(--olive);
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge.critical {
+    background: #3A1F1A;
+    color: #F2C4B8;
+    border: 1px solid #7A3D28;
+  }
+  .badge.warning {
+    background: #3A2E1C;
+    color: #F0D3A8;
+    border: 1px solid #7A4D18;
+  }
+  .badge.ok {
+    background: #233A2C;
+    color: #8FCB9F;
+    border: 1px solid #3B6B48;
+  }
+  .badge.info {
+    background: #1D2D3D;
+    color: #9DBBE0;
+    border: 1px solid #2B4E6B;
+  }
+
+  /* Tables */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin: 16px 0 24px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+  }
+  th {
+    background: var(--table-header-bg);
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--table-stripe); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--code-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .hidden-by-search {
+    display: none !important;
+  }
+
+  /* ---------- Dedicated Print Stylesheet ---------- */
+  @media print {
+    @page {
+      margin: 12mm 15mm;
+      size: A4 portrait;
+    }
+
+    body {
+      background: #FFFFFF !important;
+      color: #111111 !important;
+      font-size: 11pt !important;
+      line-height: 1.45 !important;
+    }
+
+    .control-bar, .toc-card, .btn, .search-input, .theme-toggle {
+      display: none !important;
+    }
+
+    .doc-container {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .doc-header {
+      border-bottom: 2pt solid #000000 !important;
+      padding-bottom: 12pt !important;
+      margin-bottom: 18pt !important;
+    }
+
+    .doc-title {
+      font-size: 22pt !important;
+      color: #000000 !important;
+    }
+
+    .doc-subtitle {
+      color: #444444 !important;
+      font-size: 11pt !important;
+    }
+
+    .doc-meta {
+      color: #555555 !important;
+      font-size: 9pt !important;
+    }
+
+    .section-block {
+      margin-bottom: 24pt !important;
+      page-break-inside: auto;
+    }
+
+    .section-heading {
+      font-size: 15pt !important;
+      color: #000000 !important;
+      border-bottom: 1pt solid #000000 !important;
+      page-break-after: avoid;
+      break-after: avoid;
+      margin-top: 18pt !important;
+    }
+
+    .rule-card {
+      background: #FFFFFF !important;
+      border: 1pt solid #999999 !important;
+      border-left: 4pt solid #000000 !important;
+      padding: 12pt 14pt !important;
+      margin-bottom: 14pt !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-shadow: none !important;
+    }
+
+    .rule-card.critical { border-left-color: #B8321B !important; }
+    .rule-card.warning { border-left-color: #C76E0E !important; }
+
+    .rule-title {
+      font-size: 13pt !important;
+      color: #000000 !important;
+    }
+
+    .callout-box {
+      background: #F4F4F4 !important;
+      border: 1pt solid #CCCCCC !important;
+      color: #111111 !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .callout-box.formula {
+      color: #000000 !important;
+      font-weight: 600;
+    }
+
+    .table-wrap {
+      border: 1pt solid #888888 !important;
+      background: #FFFFFF !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      margin: 10pt 0 !important;
+    }
+
+    table {
+      font-size: 9.5pt !important;
+      width: 100% !important;
+    }
+
+    th {
+      background: #E8E8E8 !important;
+      color: #000000 !important;
+      border-bottom: 1.5pt solid #000000 !important;
+      padding: 6pt 8pt !important;
+    }
+
+    td {
+      border-bottom: 1pt solid #DDDDDD !important;
+      color: #111111 !important;
+      padding: 6pt 8pt !important;
+    }
+
+    tr:nth-child(even) td {
+      background: #FAFAFA !important;
+    }
+
+    .badge {
+      border: 1pt solid #666666 !important;
+      background: transparent !important;
+      color: #000000 !important;
+      font-weight: 700 !important;
+    }
+    .badge.critical { border-color: #B8321B !important; color: #B8321B !important; }
+    .badge.warning { border-color: #C76E0E !important; color: #C76E0E !important; }
+    .badge.ok { border-color: #4A6E40 !important; color: #4A6E40 !important; }
+
+    code {
+      background: #EEEEEE !important;
+      color: #000000 !important;
+      border: 1pt solid #CCCCCC !important;
+    }
+
+    .print-footer {
+      display: block !important;
+      margin-top: 30pt;
+      padding-top: 10pt;
+      border-top: 1pt solid #CCCCCC;
+      font-size: 8pt;
+      color: #777777;
+      text-align: center;
+      font-family: var(--mono);
+    }
+  }
+
+  .print-footer {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .control-bar { padding: 10px 14px; }
+    .search-input { width: 100%; order: 3; }
+    .search-input:focus { width: 100%; }
+    .doc-container { padding: 20px 14px 60px 14px; }
+    .doc-title { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sticky Navigation & Print Controls -->
+<header class="control-bar">
+  <div class="control-left">
+    <a href="index.html" class="brand-tag">
+      <span class="brand-dot"></span>
+      SITE PMIS MANUALS
+    </a>
+    <div class="nav-pills">
+      <button class="nav-pill active" onclick="switchDoc('all', this)">All Docs</button>
+      <button class="nav-pill" onclick="switchDoc('guide', this)">Early Warning Guide</button>
+      <button class="nav-pill" onclick="switchDoc('dict', this)">Field Dictionary</button>
+    </div>
+  </div>
+
+  <div class="control-right">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search rules, fields…" oninput="filterContent(this.value)">
+    <button class="btn secondary" onclick="toggleTheme()" id="themeBtn" title="Toggle Light / Dark Mode">🌓 Theme</button>
+    <button class="btn" onclick="window.print()" title="Print or Save as PDF">
+      🖨️ Print / Save PDF
+    </button>
+    <a href="index.html" class="btn secondary" title="Back to main app">⌂ Main App</a>
+  </div>
+</header>
+
+<main class="doc-container">
+
+  <!-- Document Header -->
+  <div class="doc-header">
+    <h1 class="doc-title">
+      Site PMIS — Operational Manual & Reference Guide
+    </h1>
+    <div class="doc-subtitle">
+      A plain-English operational rulebook and complete field reference dictionary for Project Managers, Site Engineers, Logistics Officers, and Field Supervisors.
+    </div>
+    <div class="doc-meta">
+      <div class="doc-meta-item">📍 Remote Mining Facility · Philippines</div>
+      <div class="doc-meta-item">📅 Revision: August 2026</div>
+      <div class="doc-meta-item">🛡️ DOLE & Mine Safety Compliance Grounded</div>
+    </div>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="toc-card" id="tocCard">
+    <div class="toc-title">📑 Quick Jump Table of Contents</div>
+    <div class="toc-grid">
+      <div>
+        <div style="font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 4px;">📘 Early Warning Rules:</div>
+        <a href="#rule-summary" class="toc-link">🧭 7 Rules Summary Table</a>
+        <a href="#rule-1" class="toc-link">1. Delayed Shipment Behind Checkpoint</a>
+        <a href="#rule-2" class="toc-link">2. Route Weather Alert</a>
+        <a href="#rule-3" class="toc-link">3. Must-Order-By Lead Time Passed</a>
+        <a href="#rule-4" class="toc-link">4. Expiring Worker Certification</a>
+        <a href="#rule-5" class="toc-link">5. Low Fuel Stock Depletion</a>
+        <a href="#rule-6" class="toc-link">6. Activity Budget Cost Overrun</a>
+        <a href="#rule-7" class="toc-link">7. Camp Bed Road Delay & Handover</a>
+        <a href="#rule-attendance" class="toc-link">📅 Daily Attendance & Shift Tracking</a>
+      </div>
+      <div>
+        <div style="font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 4px;">📋 Field Reference Dictionary:</div>
+        <a href="#dict-procurement" class="toc-link">1. 📦 Procurement Screen</a>
+        <a href="#dict-suppliers" class="toc-link">2. 🏢 Supplier Database</a>
+        <a href="#dict-transport" class="toc-link">3. 🚚 Transport & Landed Cost</a>
+        <a href="#dict-fuel" class="toc-link">4. ⛽ Fuel Sub-Ledger</a>
+        <a href="#dict-workforce" class="toc-link">5. 👥 Workforce & Certifications</a>
+        <a href="#dict-costschedule" class="toc-link">6. 💰 Cost & Schedule Integration</a>
+        <a href="#dict-field" class="toc-link">7. 📝 Field Reporting</a>
+        <a href="#dict-campbeds" class="toc-link">8. 🛏️ Camp Bed Matrix</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- SECTION 1: EARLY WARNING SYSTEM GUIDE                             -->
+  <!-- ================================================================= -->
+  <section class="section-block" id="doc-guide">
+    <div class="section-heading" id="rule-summary">
+      <span>📘 Part I: Early Warning & Risk System Guide</span>
+    </div>
+
+    <p style="color: var(--text-dim); margin-top: 0;">
+      The Early Warning Engine automatically scans live shipments, procurement lead times, fuel stock runways, worker safety licenses, and camp housing every time data syncs.
+    </p>
+
+    <!-- Summary Table -->
+    <div class="table-wrap searchable-item">
+      <table>
+        <thead>
+          <tr>
+            <th>Warning Name</th>
+            <th>Module in App</th>
+            <th>Severity</th>
+            <th>When Does It Trigger?</th>
+            <th>Impact on Project</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Delayed Shipment</strong></td>
+            <td>🚚 Transport & Cost</td>
+            <td><span class="badge critical">⛔ Critical</span></td>
+            <td>Cargo unarrived past <code>Expected Date</code> + <code>Grace Period (2 days)</code>.</td>
+            <td>Construction work depending on materials is halted.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Route Weather Alert</strong></td>
+            <td>🚚 Transport & Cost</td>
+            <td><span class="badge critical">⛔ Critical</span> / <span class="badge warning">⚠ Warning</span></td>
+            <td>Corridor has <code>Delayed</code> (typhoon/port shut) or <code>Watch</code> (gale warning).</td>
+            <td>Barges & trucks stranded; crew shift changes delayed.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Must-Order-By Passed</strong></td>
+            <td>📦 Procurement</td>
+            <td><span class="badge critical">⛔ Critical</span></td>
+            <td>Calendar date is past <code>Must-Order-By Date</code> and status is not <code>Ordered</code>.</td>
+            <td>Materials arrive after task start date; site stoppage.</td>
+          </tr>
+          <tr>
+            <td><strong>4. Expiring Certification</strong></td>
+            <td>👥 Workforce</td>
+            <td><span class="badge critical">⛔ Critical</span> / <span class="badge warning">⚠ Warning</span></td>
+            <td>Safety/equipment license expires within <strong>30 days</strong> (Warn) or <strong>7 days</strong> (Crit).</td>
+            <td>Worker is legally disqualified by DOLE/safety rules.</td>
+          </tr>
+          <tr>
+            <td><strong>5. Low Fuel Stock</strong></td>
+            <td>⛽ Transport & Cost</td>
+            <td><span class="badge critical">⛔ Critical</span> / <span class="badge warning">⚠ Warning</span></td>
+            <td>Diesel storage down to <strong>7 days</strong> (Warn) or <strong>3 days</strong> (Crit).</td>
+            <td>Site generators and heavy excavators run out of power.</td>
+          </tr>
+          <tr>
+            <td><strong>6. Budget Cost Overrun</strong></td>
+            <td>💰 Cost & Schedule</td>
+            <td><span class="badge warning">⚠ Warning</span></td>
+            <td><code>Committed + In Transit + Installed</code> exceeds approved <code>Budget</code>.</td>
+            <td>Activity is losing money; erodes project contingency.</td>
+          </tr>
+          <tr>
+            <td><strong>7. Camp Bed Road Delay</strong></td>
+            <td>👥 Workforce / Camp Beds</td>
+            <td><span class="badge critical">⛔ Critical</span> / <span class="badge warning">⚠ Warning</span></td>
+            <td>Outbound road delay activates <strong>+24h stay extension</strong>, or same-day shift handover.</td>
+            <td>Prevents double-booking (hot-bedding) and keeps stranded crew housed safely.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Rule 1 -->
+    <div class="rule-card critical searchable-item" id="rule-1">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 1: Delayed Shipment Behind Checkpoint</h3>
+        <span class="badge critical">⛔ Critical</span>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Cargo / Material</strong>: Equipment or materials being shipped (e.g. <em>Cone Crusher Liners</em>).</li>
+        <li><strong>Expected Date</strong>: Target arrival date agreed with freight carrier.</li>
+        <li><strong>Status</strong>: Tracking stage (<em>Not Started</em>, <em>In Transit</em>, <em>At Checkpoint</em>, <em>Delivered</em>).</li>
+        <li><strong>Alert Grace Period</strong>: Configurable delay buffer under Settings (default: <strong>2 days</strong>).</li>
+        <li><strong>Linked Activity</strong>: Construction or maintenance activity waiting for this shipment.</li>
+      </ul>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <p>Turns <strong>RED (Critical)</strong> when cargo is still marked <em>"In Transit"</em> or <em>"At Checkpoint"</em> and the calendar has passed the <strong>Expected Date by more than 2 days</strong>.</p>
+
+      <div class="callout-box example">
+        <strong>Plain Example:</strong> Expected arrival is <strong>August 20</strong>. Grace period is <strong>2 days</strong> (Aug 22). On <strong>August 23</strong>, if status remains <em>In Transit</em>, the delayed alert immediately triggers and flags the linked activity (e.g. <em>"Affects activity: Primary Crusher Mechanical Erection"</em>).
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong>
+        <ol style="margin: 4px 0 0 0; padding-left: 18px;">
+          <li>Contact shipping agent or barge captain for GPS checkpoint coordinates.</li>
+          <li>Reschedule downstream labor crews to avoid paid idle standby time.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Rule 2 -->
+    <div class="rule-card critical searchable-item" id="rule-2">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 2: Route Weather Alert</h3>
+        <div>
+          <span class="badge critical">⛔ Critical</span>
+          <span class="badge warning">⚠ Warning</span>
+        </div>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Weather</strong>: Maritime or highway corridor state (<em>None</em>, <em>Watch</em>, <em>Delayed</em>).</li>
+        <li><strong>Route</strong>: Travel corridor (e.g. <em>Cebu Port → Lipata Port → Site Laydown</em>).</li>
+        <li><strong>Current Leg Mode</strong>: Active transport mode (<em>Truck</em>, <em>Barge/Boat</em>, <em>Final-Mile Road</em>).</li>
+      </ul>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <ul>
+        <li><strong>⛔ Critical (Red)</strong>: Route is marked <strong>"Delayed"</strong> (Coast Guard suspended sailings due to Typhoon Signal, or landslide road blockage).</li>
+        <li><strong>⚠ Warning (Amber)</strong>: Route is on <strong>"Watch"</strong> (Gale warning, rough sea advisory within 24–48 hours).</li>
+      </ul>
+
+      <div class="callout-box example">
+        <strong>💥 What Happens on Site:</strong> Sea barges must anchor, incurring daily demurrage fees. Stranded workers awaiting crew rotation get stuck at transit ports.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Secure sensitive cargo at regional transit hubs and arrange temporary hotel lodging for stranded personnel at transit ports.
+      </div>
+    </div>
+
+    <!-- Rule 3 -->
+    <div class="rule-card critical searchable-item" id="rule-3">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 3: Must-Order-By Date Passed (Procurement Lead Time)</h3>
+        <span class="badge critical">⛔ Critical</span>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Item</strong>: Material or equipment description.</li>
+        <li><strong>Need By</strong>: Required date when material must be physically on site ready for work.</li>
+        <li><strong>Supplier Lead (Days)</strong>: Factory manufacturing & fabrication duration.</li>
+        <li><strong>Transport Lead (Days)</strong>: Inter-island shipping & haulage duration.</li>
+        <li><strong>Buffer (Days)</strong>: Contingency safety days for customs/weather holds.</li>
+      </ul>
+
+      <div class="callout-box formula">
+        📐 <strong>Formula:</strong> Must Order By Date = Need By Date − (Supplier Lead + Transport Lead + Buffer Days)
+      </div>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <p>Triggers <strong>RED (Critical)</strong> when today's date has passed the calculated <strong>Must-Order-By Date</strong> and status has <strong>not yet been marked as "Ordered"</strong>.</p>
+
+      <div class="callout-box example">
+        <strong>Plain Example:</strong> Need steel plates on <strong>Dec 1</strong>. Supplier Lead = 30d, Shipping = 15d, Buffer = 5d (Total Lead = 50d). The <strong>Must-Order-By Date is October 12</strong>. On Oct 13, if unreleased, an emergency procurement alert is raised.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Release PO to Primary Supplier immediately, or switch to the pre-qualified <strong>Backup Supplier</strong> in the Supplier Directory.
+      </div>
+    </div>
+
+    <!-- Rule 4 -->
+    <div class="rule-card critical searchable-item" id="rule-4">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 4: Expiring Worker Certification</h3>
+        <div>
+          <span class="badge critical">⛔ Critical</span>
+          <span class="badge warning">⚠ Warning</span>
+        </div>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Worker & Trade</strong>: Full name and technical specialty (e.g. <em>Tower Crane Operator</em>).</li>
+        <li><strong>Certification</strong>: Mandatory government or safety license (e.g. <em>TESDA Crane NC II</em>).</li>
+        <li><strong>Cert Expiry</strong>: License expiration date.</li>
+        <li><strong>Rotation Out</strong>: Scheduled fly-out date for rest rotation.</li>
+        <li><strong>Alert Window</strong>: Notification lead time configured in Settings (standard: <strong>30 days</strong>).</li>
+      </ul>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <ul>
+        <li><strong>⛔ Critical (Red)</strong>: <strong>7 days or fewer</strong> remaining before certificate expiry.</li>
+        <li><strong>⚠ Warning (Amber)</strong>: Between <strong>8 and 30 days</strong> remaining before expiry.</li>
+      </ul>
+
+      <div class="callout-box example">
+        <strong>💥 What Happens on Site:</strong> Philippine DOLE and Mine Safety rules prohibit uncertified operators from operating heavy plant machinery. An expired license halts crane or earthmoving operations immediately.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Check if worker departs on rotation before expiry date. Schedule renewal test during off-rotation or mobilize a certified backup technician.
+      </div>
+    </div>
+
+    <!-- Rule 5 -->
+    <div class="rule-card critical searchable-item" id="rule-5">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 5: Low Fuel Stock (Site Autonomy Depletion)</h3>
+        <div>
+          <span class="badge critical">⛔ Critical</span>
+          <span class="badge warning">⚠ Warning</span>
+        </div>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Current Fuel Stock (L)</strong>: Total diesel volume currently inside main storage tanks.</li>
+        <li><strong>Liters Consumed</strong>: Daily burn logs from power generators and heavy fleet.</li>
+        <li><strong>Average Daily Consumption</strong>: Calculated historical daily burn rate.</li>
+      </ul>
+
+      <div class="callout-box formula">
+        📐 <strong>Formula:</strong> Days of Fuel Remaining = Current Tank Stock (L) ÷ Average Daily Consumption (L/day)
+      </div>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <ul>
+        <li><strong>⛔ Critical (Red)</strong>: Remaining fuel runway is <strong>3 days or less</strong>.</li>
+        <li><strong>⚠ Warning (Amber)</strong>: Remaining fuel runway is between <strong>4 and 7 days</strong>.</li>
+      </ul>
+
+      <div class="callout-box example">
+        <strong>Plain Example:</strong> Storage has <strong>28,000 Liters</strong>. Average burn is <strong>7,000 Liters/day</strong>. Remaining runway = <strong>4 days</strong>. System flags an immediate Fuel Warning.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Expedite fuel tanker barge / road tanker delivery immediately. If delayed, shed non-critical camp loads and conserve diesel for primary processing power.
+      </div>
+    </div>
+
+    <!-- Rule 6 -->
+    <div class="rule-card warning searchable-item" id="rule-6">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 6: Activity Budget Cost Overrun</h3>
+        <span class="badge warning">⚠ Warning</span>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Activity & Cost Code</strong>: Task name and ledger code (e.g. <em>Primary Crusher Foundation / C-101</em>).</li>
+        <li><strong>Budget</strong>: Approved financial cap.</li>
+        <li><strong>Committed</strong>: Signed contracts and POs issued.</li>
+        <li><strong>In Transit</strong>: Freight & logistics expenditure en route.</li>
+        <li><strong>Installed / Earned</strong>: Completed, inspected on-site work.</li>
+      </ul>
+
+      <div class="callout-box formula">
+        📐 <strong>Formula:</strong> Total Spend = Committed + In Transit + Installed &nbsp;|&nbsp; Variance = Budget − Total Spend
+      </div>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <p>Triggers <strong>Amber (Warning)</strong> whenever <strong>Total Spend exceeds Budget</strong> (resulting in a negative variance shown in red in the app).</p>
+
+      <div class="callout-box example">
+        <strong>Plain Example:</strong> Budget is <strong>₱1,000,000</strong>. Committed = ₱500k, In-Transit = ₱200k, Installed = ₱400k (Total = ₱1,100,000). Activity is <strong>₱100,000 over budget</strong>.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Audit contractor billings for unauthorized scope creep and submit a formal change order request to project management.
+      </div>
+    </div>
+
+    <!-- Rule 7 -->
+    <div class="rule-card critical searchable-item" id="rule-7">
+      <div class="rule-header">
+        <h3 class="rule-title">Rule 7: Camp Bed Road Delay & Handover (Anti-Hot-Bedding)</h3>
+        <div>
+          <span class="badge critical">⛔ Critical</span>
+          <span class="badge warning">⚠ Warning</span>
+        </div>
+      </div>
+
+      <div class="rule-subheading">📱 Fields in App Used:</div>
+      <ul class="field-list">
+        <li><strong>Room / Bed ID</strong>: Physical bunk identifier (e.g. <code>MH-A-01</code>).</li>
+        <li><strong>Current Occupant</strong>: Worker currently sleeping in the bed.</li>
+        <li><strong>Vacating Date</strong>: Planned fly-out date.</li>
+        <li><strong>Road Delay Safety Extension (+24h Ext)</strong>: Emergency toggle activated when road/weather stops outbound convoys.</li>
+        <li><strong>Bed Status</strong>: 🔴 <em>Occupied</em>, 🟡 <em>Pending Handover</em>, 🔵 <em>Housekeeping</em>, 🟢 <em>Available</em>.</li>
+      </ul>
+
+      <div class="rule-subheading">⏱️ When Does It Occur?</div>
+      <ul>
+        <li><strong>⛔ Critical (Red) — Road Delay Bed Extension</strong>: Active when road mud/weather halts transport, automatically extending outbound occupant stay by +24 hours to prevent unhousing personnel.</li>
+        <li><strong>⚠ Warning (Amber) — Same-Day Bed Turnover</strong>: Active when bed is <em>Pending Handover</em> and vacating date is <strong>Today</strong>.</li>
+      </ul>
+
+      <div class="callout-box example">
+        <strong>💥 What Happens on Site:</strong> Eliminates dangerous "hot-bedding" (double-booking uncleaned beds) and prevents leaving outbound workers stranded in weather without accommodation.
+      </div>
+
+      <div class="callout-box action">
+        <strong>✅ Action Required:</strong> Execute 3-step turnover protocol:
+        <ol style="margin: 4px 0 0 0; padding-left: 18px;">
+          <li>When worker leaves, click <strong>"Send to Housekeeping"</strong> (🔵).</li>
+          <li>Housekeeping inspects and disinfects linen, then clicks <strong>"Sanitation Cleared"</strong> (🟢).</li>
+          <li>Front desk clicks <strong>"Check-In Inbound"</strong> (🔴) only after green clearance.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Attendance Bonus -->
+    <div class="rule-card info searchable-item" id="rule-attendance">
+      <div class="rule-header">
+        <h3 class="rule-title">📅 Bonus Reference: Daily Attendance & Time Tracking</h3>
+        <span class="badge info">Workforce Module</span>
+      </div>
+
+      <div class="rule-subheading">📱 Key Attendance Fields:</div>
+      <ul class="field-list">
+        <li><strong>Selected Date</strong>: Filter logs by <em>Today</em>, <em>Yesterday</em>, or any date on the calendar.</li>
+        <li><strong>Attendance Status</strong>: 🟢 <code>Present</code> (Full day), 🟡 <code>Late</code> (Partial day), 🔴 <code>Absent</code>, ⚪ <code>Off Rotation</code>.</li>
+        <li><strong>Time In & Out</strong>: Shift clock times (e.g. <code>07:00</code> to <code>17:00</code>).</li>
+        <li><strong>Calculated Shift Hours</strong>: Automated formula: <code>Time Out − Time In</code> (e.g. <code>10.0 hrs</code>).</li>
+        <li><strong>Work Area Notes</strong>: Specific site location (e.g. <em>Crusher foundation formwork, Night OT</em>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SECTION 2: COMPLETE FIELD REFERENCE DICTIONARY                    -->
+  <!-- ================================================================= -->
+  <section class="section-block" id="doc-dict">
+    <div class="section-heading">
+      <span>📋 Part II: Complete Field Reference Dictionary</span>
+    </div>
+
+    <p style="color: var(--text-dim); margin-top: 0;">
+      A comprehensive, field-by-field reference guide for all inputs, calculated formulas, and database attributes across the Site PMIS application.
+    </p>
+
+    <!-- 1. Procurement -->
+    <div class="section-block searchable-item" id="dict-procurement">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        1. 📦 Procurement Screen (Materials & Ordering)
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Item</strong></td>
+              <td>Name or description of equipment, structural steel, or consumables needed on site.</td>
+              <td><code>Cone Crusher Liners</code></td>
+              <td>Identifies the physical item needed for maintenance or construction.</td>
+            </tr>
+            <tr>
+              <td><strong>Supplier</strong></td>
+              <td>Company or vendor supplying the material.</td>
+              <td><code>Metso Outotec Phils</code></td>
+              <td>Used to contact vendor and benchmark performance.</td>
+            </tr>
+            <tr>
+              <td><strong>Qty</strong></td>
+              <td>Total quantity or units required.</td>
+              <td><code>4</code></td>
+              <td>Determines purchase volume and freight sizing.</td>
+            </tr>
+            <tr>
+              <td><strong>Unit Cost</strong></td>
+              <td>Purchase price per individual unit in Philippine Pesos.</td>
+              <td><code>₱250,000</code></td>
+              <td>Multiplied by quantity to calculate procurement spend.</td>
+            </tr>
+            <tr>
+              <td><strong>Supplier Lead (d)</strong></td>
+              <td>Days factory takes to manufacture and pack the item.</td>
+              <td><code>45</code></td>
+              <td>Critical for back-calculating when PO must be placed.</td>
+            </tr>
+            <tr>
+              <td><strong>Transport Lead (d)</strong></td>
+              <td>Estimated transit days for haulage and barging to remote site.</td>
+              <td><code>15</code></td>
+              <td>Accounts for inter-island shipping durations.</td>
+            </tr>
+            <tr>
+              <td><strong>Buffer (d)</strong></td>
+              <td>Extra safety days added for customs, weather, or port congestion.</td>
+              <td><code>7</code></td>
+              <td>Prevents late deliveries if shipping hits normal delays.</td>
+            </tr>
+            <tr>
+              <td><strong>Need By</strong></td>
+              <td>Deadline date when material must sit in site laydown yard.</td>
+              <td><code>Nov 30, 2026</code></td>
+              <td>Tied to scheduled start date of construction task.</td>
+            </tr>
+            <tr>
+              <td><strong>Must Order By</strong></td>
+              <td><em>Calculated by App</em>: <code>Need By − (Supplier + Transport + Buffer)</code></td>
+              <td><code>Sep 23, 2026</code></td>
+              <td>Hard cutoff date to issue PO without delaying the project.</td>
+            </tr>
+            <tr>
+              <td><strong>Status</strong></td>
+              <td>Current staging milestone along supply chain.</td>
+              <td><code>Ordered</code>, <code>Regional Hub</code>, <code>Port</code>, <code>Laydown</code>, <code>Installed</code></td>
+              <td>Shows where cargo is physically located.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. Supplier Database -->
+    <div class="section-block searchable-item" id="dict-suppliers">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        2. 🏢 Supplier Database Screen
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Supplier</strong></td>
+              <td>Official name of distributor, fabricator, or vendor.</td>
+              <td><code>Apex Industrial Steel</code></td>
+              <td>Identifies commercial entity.</td>
+            </tr>
+            <tr>
+              <td><strong>Item Category</strong></td>
+              <td>Category of items supplied.</td>
+              <td><code>Grinding Media</code></td>
+              <td>Allows quick filtering of vendors by product.</td>
+            </tr>
+            <tr>
+              <td><strong>Tier</strong></td>
+              <td>Classification: <strong>Primary</strong> (standard) or <strong>Backup</strong> (emergency).</td>
+              <td><code>Primary</code> / <code>Backup</code></td>
+              <td>Enables rapid switching if primary vendor is backlogged.</td>
+            </tr>
+            <tr>
+              <td><strong>Avg Lead (d)</strong></td>
+              <td>Historical average days from PO to factory dispatch.</td>
+              <td><code>30</code></td>
+              <td>Benchmark used to detect supplier delivery delays.</td>
+            </tr>
+            <tr>
+              <td><strong>Reliability %</strong></td>
+              <td>On-time, in-full fulfillment percentage on past orders.</td>
+              <td><code>95%</code></td>
+              <td>Measures supplier quality and track record.</td>
+            </tr>
+            <tr>
+              <td><strong>Primary Route</strong></td>
+              <td>Standard freight corridor used by this vendor.</td>
+              <td><code>Manila to Surigao Port</code></td>
+              <td>Assists logistics coordination.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. Transport & Landed Cost -->
+    <div class="section-block searchable-item" id="dict-transport">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        3. 🚚 Transport & Cost Screen (Shipments & Landed Cost)
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Material / Cargo</strong></td>
+              <td>Cargo item name or linked material.</td>
+              <td><code>Ball Mill Shell Liners</code></td>
+              <td>Identifies physical freight shipment.</td>
+            </tr>
+            <tr>
+              <td><strong>Route</strong></td>
+              <td>Transit corridor from origin to site laydown yard.</td>
+              <td><code>Cebu Port → Lipata → Site</code></td>
+              <td>Defines waypoints and checkpoints.</td>
+            </tr>
+            <tr>
+              <td><strong>Current Leg Mode</strong></td>
+              <td>Active transport mode for current leg.</td>
+              <td><code>Truck</code>, <code>Barge/Boat</code>, <code>Final-Mile</code></td>
+              <td>Differentiates road vs maritime transit risks.</td>
+            </tr>
+            <tr>
+              <td><strong>Status</strong></td>
+              <td>Leg progress: <code>Not Started</code>, <code>In Transit</code>, <code>At Checkpoint</code>, <code>Delivered</code>.</td>
+              <td><code>In Transit</code></td>
+              <td>Triggers delayed shipment alert if overdue.</td>
+            </tr>
+            <tr>
+              <td><strong>Expected</strong></td>
+              <td>Target arrival date at destination.</td>
+              <td><code>Aug 20, 2026</code></td>
+              <td>Benchmark date for delay detection.</td>
+            </tr>
+            <tr>
+              <td><strong>Actual</strong></td>
+              <td>Real physical arrival date and time on site.</td>
+              <td><code>Aug 22, 2026</code></td>
+              <td>Confirms delivery and closes transit risk.</td>
+            </tr>
+            <tr>
+              <td><strong>Weather</strong></td>
+              <td>Weather flag: <code>None</code>, <code>Watch</code>, <code>Delayed</code>.</td>
+              <td><code>Watch</code> / <code>Delayed</code></td>
+              <td>Warns of typhoons, rough seas, and road mud.</td>
+            </tr>
+            <tr>
+              <td><strong>Freight</strong></td>
+              <td>Base shipping and haulage fee.</td>
+              <td><code>₱120,000</code></td>
+              <td>Direct freight invoice cost.</td>
+            </tr>
+            <tr>
+              <td><strong>Fuel Surch.</strong></td>
+              <td>Bunker / diesel fuel surcharge billed by carrier.</td>
+              <td><code>₱15,000</code></td>
+              <td>Variable fuel price adjustment.</td>
+            </tr>
+            <tr>
+              <td><strong>Demurrage</strong></td>
+              <td>Port holding and barge standby penalties.</td>
+              <td><code>₱25,000</code></td>
+              <td>Measures unplanned port hold costs.</td>
+            </tr>
+            <tr>
+              <td><strong>Handling</strong></td>
+              <td>Stevedoring, crane rigging, and terminal fees.</td>
+              <td><code>₱18,000</code></td>
+              <td>Loading and cargo transfer charges.</td>
+            </tr>
+            <tr>
+              <td><strong>Insurance</strong></td>
+              <td>Marine transit risk cargo policy fee.</td>
+              <td><code>₱8,000</code></td>
+              <td>Protects against damage or loss at sea.</td>
+            </tr>
+            <tr>
+              <td><strong>Landed Cost</strong></td>
+              <td><em>Calculated by App</em>: <code>Freight + Fuel + Demurrage + Handling + Insurance</code></td>
+              <td><code>₱186,000</code></td>
+              <td>True delivered cost to remote mine site.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. Fuel Sub-Ledger -->
+    <div class="section-block searchable-item" id="dict-fuel">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        4. ⛽ Fuel Sub-Ledger Screen
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Date</strong></td>
+              <td>Date of fuel delivery or daily consumption log.</td>
+              <td><code>Aug 28, 2026</code></td>
+              <td>Maintains daily diesel burn history.</td>
+            </tr>
+            <tr>
+              <td><strong>Type</strong></td>
+              <td>Classification: <strong>Delivery</strong> (refill) or <strong>Consumption</strong> (burned).</td>
+              <td><code>Consumption</code></td>
+              <td>Computes daily site burn rate.</td>
+            </tr>
+            <tr>
+              <td><strong>Liters</strong></td>
+              <td>Volume of diesel in liters.</td>
+              <td><code>6,500 L</code></td>
+              <td>Tracks tank drawdown or refill.</td>
+            </tr>
+            <tr>
+              <td><strong>Cost</strong></td>
+              <td>Total invoice cost (for deliveries).</td>
+              <td><code>₱422,500</code></td>
+              <td>Tracks diesel operational spend.</td>
+            </tr>
+            <tr>
+              <td><strong>Notes / Equipment</strong></td>
+              <td>Generator or machine fleet identifier.</td>
+              <td><code>GenSet #1 & Excavator CAT336</code></td>
+              <td>Pinpoints highest fuel consumers.</td>
+            </tr>
+            <tr>
+              <td><strong>Current Fuel Stock</strong></td>
+              <td>Live diesel liters currently inside site tanks.</td>
+              <td><code>35,000 L</code></td>
+              <td>Numerator used to calculate fuel autonomy.</td>
+            </tr>
+            <tr>
+              <td><strong>Alert Threshold</strong></td>
+              <td>Minimum safety runway before alarm (configured in Settings).</td>
+              <td><code>7 days</code></td>
+              <td>Safety buffer to reorder before running dry.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5. Workforce -->
+    <div class="section-block searchable-item" id="dict-workforce">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        5. 👥 Workforce Screen (Attendance & Certifications)
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Worker</strong></td>
+              <td>Full name of employee or contractor.</td>
+              <td><code>Juan Dela Cruz</code></td>
+              <td>Identifies workforce personnel.</td>
+            </tr>
+            <tr>
+              <td><strong>Trade / Role</strong></td>
+              <td>Operational specialty or job title.</td>
+              <td><code>Tower Crane Operator</code></td>
+              <td>Verifies manning levels for key operations.</td>
+            </tr>
+            <tr>
+              <td><strong>Rotation In</strong></td>
+              <td>Start date of current on-site tour (2-on/2-off).</td>
+              <td><code>Aug 15, 2026</code></td>
+              <td>Tracks arrival date on site.</td>
+            </tr>
+            <tr>
+              <td><strong>Rotation Out</strong></td>
+              <td>Scheduled fly-out date for rest rotation.</td>
+              <td><code>Aug 29, 2026</code></td>
+              <td>Used to plan crew transport seats.</td>
+            </tr>
+            <tr>
+              <td><strong>Certification</strong></td>
+              <td>Mandatory license or qualification card.</td>
+              <td><code>TESDA Crane NC II</code></td>
+              <td>Ensures DOLE and safety compliance.</td>
+            </tr>
+            <tr>
+              <td><strong>Cert Expiry</strong></td>
+              <td>Official expiration date of certificate.</td>
+              <td><code>Sep 15, 2026</code></td>
+              <td>Triggers early warning before license lapses.</td>
+            </tr>
+            <tr>
+              <td><strong>Deployment Status</strong></td>
+              <td>Physical location: <strong>On Site</strong> or <strong>Off Rotation</strong>.</td>
+              <td><code>On Site</code></td>
+              <td>Shows who is physically at the facility.</td>
+            </tr>
+            <tr>
+              <td><strong>Attendance Status</strong></td>
+              <td>Shift presence: <code>Present</code>, <code>Late</code>, <code>Absent</code>, <code>Off Rotation</code>.</td>
+              <td><code>Present</code></td>
+              <td>Daily muster roll recording.</td>
+            </tr>
+            <tr>
+              <td><strong>Time In / Time Out</strong></td>
+              <td>Shift clock-in and clock-out timestamps.</td>
+              <td><code>07:00</code> / <code>17:00</code></td>
+              <td>Calculates daily worked man-hours.</td>
+            </tr>
+            <tr>
+              <td><strong>Hours Logged</strong></td>
+              <td><em>Calculated by App</em>: Shift duration in hours.</td>
+              <td><code>10.0 hrs</code></td>
+              <td>Used for labor productivity calculations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 6. Cost & Schedule -->
+    <div class="section-block searchable-item" id="dict-costschedule">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        6. 💰 Cost & Schedule Screen (Budget vs Spend)
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Activity</strong></td>
+              <td>Name of WBS construction or maintenance task.</td>
+              <td><code>Primary Crusher Foundation</code></td>
+              <td>Identifies physical site work package.</td>
+            </tr>
+            <tr>
+              <td><strong>Cost Code</strong></td>
+              <td>Financial accounting control code.</td>
+              <td><code>C-101</code></td>
+              <td>Links site activities to financial ledgers.</td>
+            </tr>
+            <tr>
+              <td><strong>Budget</strong></td>
+              <td>Approved financial ceiling for this activity.</td>
+              <td><code>₱1,500,000</code></td>
+              <td>Baseline cost allocation.</td>
+            </tr>
+            <tr>
+              <td><strong>Committed</strong></td>
+              <td>Signed contracts and POs issued.</td>
+              <td><code>₱600,000</code></td>
+              <td>Legally committed expenditure.</td>
+            </tr>
+            <tr>
+              <td><strong>In Transit</strong></td>
+              <td>Freight & materials currently in transit.</td>
+              <td><code>₱250,000</code></td>
+              <td>Logistics spend assigned to this task.</td>
+            </tr>
+            <tr>
+              <td><strong>Installed / Earned</strong></td>
+              <td>Value of completed, inspected physical work on site.</td>
+              <td><code>₱400,000</code></td>
+              <td>Earned value representing delivered results.</td>
+            </tr>
+            <tr>
+              <td><strong>Total Spend</strong></td>
+              <td><em>Calculated by App</em>: <code>Committed + In Transit + Installed</code></td>
+              <td><code>₱1,250,000</code></td>
+              <td>Total funds already incurred or encumbered.</td>
+            </tr>
+            <tr>
+              <td><strong>Variance</strong></td>
+              <td><em>Calculated by App</em>: <code>Budget − Total Spend</code></td>
+              <td><code>+₱250,000</code> (Green) / <code>-₱50,000</code> (Red)</td>
+              <td>Positive = Under Budget; Negative = Overrun.</td>
+            </tr>
+            <tr>
+              <td><strong>Linked Shipment</strong></td>
+              <td>Specific cargo shipment tied to this task.</td>
+              <td><code>Crusher Anchor Bolts</code></td>
+              <td>Links shipping delays directly to schedule risks.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 7. Field Reporting -->
+    <div class="section-block searchable-item" id="dict-field">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        7. 📝 Field Reporting Screen
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Date</strong></td>
+              <td>Date of daily field inspection or shift report.</td>
+              <td><code>Aug 28, 2026</code></td>
+              <td>Logs timestamp for daily site diary.</td>
+            </tr>
+            <tr>
+              <td><strong>Type</strong></td>
+              <td>Category: <code>Progress</code>, <code>Incident</code>, <code>Delivery</code>, <code>Safety</code>.</td>
+              <td><code>Progress</code></td>
+              <td>Classifies observations for project management.</td>
+            </tr>
+            <tr>
+              <td><strong>Description</strong></td>
+              <td>Daily observations, work progress, or site issues.</td>
+              <td><code>Completed rebar tying for Crusher base.</code></td>
+              <td>Captures qualitative field intelligence.</td>
+            </tr>
+            <tr>
+              <td><strong>Photos</strong></td>
+              <td>Photos captured and uploaded from mobile camera.</td>
+              <td><code>[2 images]</code></td>
+              <td>Visual evidence of completed work or hazards.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 8. Camp Bed Matrix -->
+    <div class="section-block searchable-item" id="dict-campbeds">
+      <h3 style="font-family: var(--disp); font-size: 18px; color: var(--text); margin-bottom: 10px;">
+        8. 🛏️ Camp Bed Matrix Screen (Housing & Turnover)
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Field Name in App</th>
+              <th style="width: 38%;">What Does It Mean?</th>
+              <th style="width: 18%;">Example Value</th>
+              <th style="width: 22%;">Why Is It Important?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ROOM / BED ID</strong></td>
+              <td>Specific physical room and bunk/bed number in camp.</td>
+              <td><code>MH-A-01</code></td>
+              <td>Pinpoints bed location for accommodation allocation.</td>
+            </tr>
+            <tr>
+              <td><strong>CURRENT OCCUPANT</strong></td>
+              <td>Worker currently assigned to bed, or <code>Vacant</code>.</td>
+              <td><code>Juan Dela Cruz</code></td>
+              <td>Identifies who is physically sleeping in room.</td>
+            </tr>
+            <tr>
+              <td><strong>SHIFT ROTATION STATUS</strong></td>
+              <td>Rotation state of resident.</td>
+              <td><code>Shift Ending</code>, <code>Mid-Roster</code>, <code>Housekeeping</code>, <code>Ready</code></td>
+              <td>Clarifies departure timing or prep state.</td>
+            </tr>
+            <tr>
+              <td><strong>VACATING DATE</strong></td>
+              <td>Date worker is scheduled to leave site (+24h if delayed).</td>
+              <td><code>Aug 29, 2026</code></td>
+              <td>Coordinates bed turnover with incoming crew.</td>
+            </tr>
+            <tr>
+              <td><strong>NEXT RESERVED OCCUPANT</strong></td>
+              <td>Inbound technician scheduled to take bed upon cleaning.</td>
+              <td><code>Mark Santos (In Transit)</code></td>
+              <td>Coordinates room handover between shifts.</td>
+            </tr>
+            <tr>
+              <td><strong>BED STATUS</strong></td>
+              <td>Real-time status: 🔴 <em>Occupied</em>, 🟡 <em>Pending Handover</em>, 🔵 <em>Housekeeping</em>, 🟢 <em>Available</em>.</td>
+              <td><code>🟡 Pending Handover</code></td>
+              <td>Color-coded status preventing hot-bedding.</td>
+            </tr>
+            <tr>
+              <td><strong>Road Delay Safety Extension</strong></td>
+              <td>Automated extension (+24h) when outbound road convoys hit mud/weather.</td>
+              <td><code>+24h Ext</code></td>
+              <td>Protects workers from being evicted while stranded.</td>
+            </tr>
+            <tr>
+              <td><strong>Check-In Inbound (Action)</strong></td>
+              <td>Connects incoming worker and sets status to 🔴 <em>Occupied</em>.</td>
+              <td>Action Button</td>
+              <td>Fast check-in once room is sanitized.</td>
+            </tr>
+            <tr>
+              <td><strong>Send to Housekeeping (Action)</strong></td>
+              <td>Disconnects departing worker and sets to 🔵 <em>Housekeeping</em>.</td>
+              <td>Action Button</td>
+              <td>Routes room for linen change & sanitation.</td>
+            </tr>
+            <tr>
+              <td><strong>Sanitation Cleared (Action)</strong></td>
+              <td>Signs off cleaning inspection and sets to 🟢 <em>Available</em>.</td>
+              <td>Action Button</td>
+              <td>Certifies room clean and ready for booking.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Print Footer for Hardcopy Pages -->
+  <div class="print-footer">
+    SITE PMIS — Remote Mining Facility Operations Manual & Field Reference Dictionary · Page Printout · Confidential
+  </div>
+
+</main>
+
+<script>
+  // Filter content by search query
+  function filterContent(query) {
+    const q = (query || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.searchable-item');
+    let matchCount = 0;
+
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      if (!q || text.includes(q)) {
+        item.classList.remove('hidden-by-search');
+        matchCount++;
+      } else {
+        item.classList.add('hidden-by-search');
+      }
+    });
+
+    const toc = document.getElementById('tocCard');
+    if (toc) {
+      toc.style.display = q ? 'none' : 'block';
+    }
+  }
+
+  // Switch between All Docs, Early Warning Guide, and Field Dictionary
+  function switchDoc(type, btn) {
+    document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const guideSec = document.getElementById('doc-guide');
+    const dictSec = document.getElementById('doc-dict');
+
+    if (type === 'guide') {
+      guideSec.style.display = 'block';
+      dictSec.style.display = 'none';
+    } else if (type === 'dict') {
+      guideSec.style.display = 'none';
+      dictSec.style.display = 'block';
+    } else {
+      guideSec.style.display = 'block';
+      dictSec.style.display = 'block';
+    }
+  }
+
+  // Light / Dark Theme toggle
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('site_pmis_docs_theme', next);
+  }
+
+  // Initialize theme from storage
+  const savedTheme = localStorage.getItem('site_pmis_docs_theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+</script>
+
+</body>
+</html>
