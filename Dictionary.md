@@ -1,130 +1,224 @@
-# Site PMIS — Complete Field Reference Dictionary
-*A clear, non-technical reference guide for all fields across every screen in the Site PMIS application.*
+# Site PMIS — Early Warning & Risk System Guide
+*A plain-English operational guide for Project Managers, Site Engineers, and Field Supervisors.*
 
 ---
 
-## 1. 📦 Procurement Screen (Materials & Ordering)
+## 🧭 Quick Summary of the 7 Early Warning Rules
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Item** | The name or description of the equipment, structural steel, or consumables needed on site. | `Cone Crusher Liners` | Identifies the physical part needed for maintenance or construction. |
-| **Supplier** | The company or vendor supplying the item. | `Metso Outotec Phils` | Used to contact the vendor and track supplier performance. |
-| **Qty** | The total quantity or units required. | `4` | Determines purchase volume and freight sizing. |
-| **Unit Cost** | The purchase price per individual unit in Philippine Pesos. | `₱250,000` | Multiplied by quantity to calculate the total procurement spend. |
-| **Supplier Lead (d)** | How many days the factory takes to manufacture and prepare the item for shipping. | `45` | Critical for back-calculating when the purchase order must be issued. |
-| **Transport Lead (d)** | Estimated transit days required for road haulage and sea barging from the vendor to the remote site. | `15` | Accounts for shipping duration across islands. |
-| **Buffer (d)** | Extra safety days added to absorb potential customs delays, weather holds, or port congestion. | `7` | Prevents late deliveries if transport encounters normal delays. |
-| **Need By** | The deadline date when the material must physically sit in the site laydown yard. | `Nov 30, 2026` | Tied to the scheduled start date of the construction activity. |
-| **Must Order By** | *Calculated automatically by the app*: `Need By Date` minus (`Supplier Lead` + `Transport Lead` + `Buffer`). | `Sep 23, 2026` | The hard cutoff date to place the purchase order without delaying the project. |
-| **Status** | The current staging milestone of the cargo. | `Ordered`, `Regional Hub`, `Provincial Port`, `Site Laydown`, `Installed` | Shows where the item is physically located along the supply chain. |
+| Warning Name | Module in App | Severity Level | When Does It Trigger? | Impact on the Project |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Delayed Shipment** | 🚚 Transport & Cost | ⛔ **Critical** | When cargo has not arrived after its **Expected Date** plus the **Grace Period (2 days)**. | Construction work depending on these materials is delayed. |
+| **2. Route Weather Alert** | 🚚 Transport & Cost | ⛔ **Critical** / ⚠ **Warning** | When a travel corridor has a **Delayed** (typhoon/port closure) or **Watch** (gale/rough seas) flag. | Boats and trucks are stranded; incoming/outgoing worker rotations are disrupted. |
+| **3. Must-Order-By Passed** | 📦 Procurement | ⛔ **Critical** | When today's date is past the calculated **Must-Order-By Date** and the material has not been ordered yet. | Materials will arrive late, leading to site work stoppage. |
+| **4. Expiring Certification** | 👥 Workforce | ⛔ **Critical** / ⚠ **Warning** | When a worker's safety or equipment license is expiring within **30 days** (Warning) or **7 days** (Critical). | Worker is legally disqualified from operating machinery or entering high-risk areas. |
+| **5. Low Fuel Stock** | ⛽ Transport & Cost | ⛔ **Critical** / ⚠ **Warning** | When remaining diesel in the site tanks is down to **7 days** (Warning) or **3 days** (Critical). | Site diesel generators and heavy equipment will run out of power. |
+| **6. Budget Cost Overrun** | 💰 Cost & Schedule | ⚠ **Warning** | When total money spent (**Committed + In Transit + Installed**) is higher than the approved **Budget**. | The activity is losing money and cutting into project contingency reserves. |
+| **7. Camp Bed Road Delay & Handover** | 👥 Workforce / Camp Beds | ⛔ **Critical** / ⚠ **Warning** | When outbound transport encounters weather/mud delays extending bed stay (+24h), or a bed has a same-day shift handover. | Outbound workers are stranded; inbound workers risk double-booking (hot-bedding) or uncleaned rooms. |
 
 ---
 
-## 2. 🏢 Supplier Database Screen
-
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Supplier** | Official name of the distributor, fabricator, or vendor. | `Apex Industrial Steel` | Identifies the commercial vendor. |
-| **Item Category** | The category of items supplied. | `Grinding Media` | Allows quick filtering of vendors by product type. |
-| **Tier** | Classification of the supplier: **Primary** (standard vendor) or **Backup** (emergency secondary vendor). | `Primary` / `Backup` | Enables quick switching to a backup supplier if the primary vendor is delayed. |
-| **Avg Lead (d)** | Historical average duration from PO issuance to dispatch. | `30` | Benchmark used to detect vendor delays. |
-| **Reliability %** | On-time and in-full fulfillment percentage based on past orders. | `95%` | Measures supplier performance and reliability. |
-| **Primary Route** | Normal transit corridor used by this vendor. | `Manila to Surigao Port` | Helps coordinate multi-modal shipping logistics. |
+## 🔍 Detailed Explanations of Each Rule & App Fields
 
 ---
 
-## 3. 🚚 Transport & Cost Screen (Shipments & Landed Cost)
+### Rule 1: Delayed Shipment Behind Checkpoint
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Material / Cargo** | Cargo item name or linked material. | `Ball Mill Shell Liner Plates` | Identifies the physical shipment. |
-| **Route** | The transit path from origin to site laydown. | `Cebu Port → Lipata Port → Site` | Defines checkpoints along the corridor. |
-| **Current Leg Mode** | Active transport method for this segment of the trip. | `Truck`, `Barge/Boat`, `Final-Mile` | Allows tracking road vs. maritime transit risks. |
-| **Status** | Current leg progress: `Not Started`, `In Transit`, `At Checkpoint`, `Delivered`. | `In Transit` | Triggers delayed shipment alerts if overdue. |
-| **Expected** | Estimated arrival date at destination or site laydown. | `Aug 20, 2026` | Benchmark date used to detect shipment delays. |
-| **Actual** | Real physical arrival date and time. | `Aug 22, 2026` | Confirms delivery and stops delay tracking. |
-| **Weather** | Weather condition flag for the corridor: `None`, `Watch`, `Delayed`. | `Watch` / `Delayed` | Warns of typhoons, rough seas, or impassable roads. |
-| **Freight** | Base carrier shipping and trucking fee. | `₱120,000` | Direct transport cost. |
-| **Fuel Surch.** | Diesel / bunker fuel surcharge billed by shipping lines. | `₱15,000` | Variable fuel index fee. |
-| **Demurrage** | Port holding and barge standby penalties for delayed unloading. | `₱25,000` | Unplanned delay penalty cost. |
-| **Handling** | Stevedoring, crane rigging, and port terminal charges. | `₱18,000` | Cargo loading and transfer fees. |
-| **Insurance** | Cargo marine transit risk coverage policy cost. | `₱8,000` | Protects against damage or loss at sea. |
-| **Landed Cost** | *Calculated automatically by the app*: `Freight + Fuel Surcharge + Demurrage + Handling + Insurance`. | `₱186,000` | True total cost to deliver the cargo to the remote site. |
+#### 📱 Fields in the App Used for this Rule:
+* **Cargo / Material**: The name of the equipment or materials being shipped (e.g., *Cone Crusher Liners*, *HDPE Pipes*).
+* **Expected Date**: The target arrival date agreed with the shipping contractor.
+* **Status**: Current tracking stage (*Not Started*, *In Transit*, *At Checkpoint*, *Delivered*).
+* **Alert Grace Period**: The allowable delay buffer before raising a formal alert (configured under Site Settings, standard is **2 days**).
+* **Linked Activity**: The specific site construction job that is waiting for this cargo.
 
----
+#### ⏱️ When Does It Occur?
+* This alert turns **RED (Critical)** when cargo is still **"In Transit"** or **"At Checkpoint"** and the calendar has passed the **Expected Date by more than 2 days**.
+* **Plain Example**:
+  * Expected arrival date is **August 20**.
+  * Grace period is **2 days** (until August 22).
+  * On **August 23**, if the status is still *In Transit*, the system triggers an immediate **Delayed Shipment Alert**.
 
-## 4. ⛽ Fuel Sub-Ledger Screen
+#### 💥 What Happens on Site?
+* The system checks which construction task is linked to this shipment and flags it (for example: *"Affects activity: Primary Crusher Mechanical Erection"*).
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Date** | Date of the fuel delivery or daily consumption log. | `Aug 28, 2026` | Tracks daily diesel burn history. |
-| **Type** | Classification: **Delivery** (tank refill) or **Consumption** (fuel burned). | `Consumption` | Used to calculate the site's average daily burn rate. |
-| **Liters** | Volume of diesel in liters. | `6,500` | Tracks fuel volume drawdown or refill. |
-| **Cost** | Total invoice cost (for deliveries). | `₱422,500` | Tracks diesel fuel operational expenses. |
-| **Notes / Equipment** | Machine fleet or power generator ID. | `GenSet #1 & Excavator CAT336` | Helps identify which equipment is consuming the most fuel. |
-| **Current Fuel Stock (L)** | Live diesel volume currently inside the site storage tanks. | `35,000 L` | Numerator used to compute days of fuel remaining. |
-| **Alert Threshold (Days)** | Minimum safety runway before a warning is raised (configured in Settings). | `7 days` | Safety buffer ensuring fuel re-orders arrive before tanks run dry. |
+#### ✅ What Action is Needed?
+1. Contact the shipping agent or barge captain to get the exact location.
+2. Adjust the construction work schedule so laborers are not standing idle waiting for materials.
 
 ---
 
-## 5. 👥 Workforce Screen (Attendance, Time In/Out & Certifications)
+### Rule 2: Route Weather Alert
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Worker** | Full name of the employee or technician. | `Juan Dela Cruz` | Identifies the workforce member. |
-| **Trade / Role** | Operational specialty or job position. | `Tower Crane Operator` | Verifies manning levels for critical site positions. |
-| **Rotation In** | Start date of current on-site tour. | `Aug 15, 2026` | Tracks when the worker arrived on site. |
-| **Rotation Out** | Scheduled fly-out date for rest rotation. | `Aug 29, 2026` | Used to plan crew changes and transport seats. |
-| **Certification** | Mandatory safety license or equipment cert. | `TESDA Crane Operator NC II` | Ensures regulatory and DOLE safety compliance. |
-| **Cert Expiry** | Date when the certification expires. | `Sep 15, 2026` | Triggers early warning if cert is expiring soon. |
-| **Deployment Status** | Physical deployment: **On Site** or **Off Rotation**. | `On Site` | Identifies who is physically on the project site. |
-| **Selected Date (Calendar)** | The date being inspected in the attendance log. | `Today`, `Yesterday`, `Aug 28, 2026` | Allows looking up past daily shift attendance. |
-| **Attendance Status** | Presence on shift: `Present`, `Late`, `Absent`, `Off Rotation`. | `Present` | Measures daily labor attendance. |
-| **Time In** | Clock-in time for the shift. | `07:00` | Tracks start of working hours. |
-| **Time Out** | Clock-out time at shift completion. | `17:00` | Tracks end of working hours. |
-| **Hours Logged** | *Calculated automatically by the app*: Total shift duration. | `10.0 hrs` | Used for man-hour tracking and labor productivity reports. |
+#### 📱 Fields in the App Used for this Rule:
+* **Weather**: The sea or road corridor condition (*None*, *Watch*, *Delayed*).
+* **Route**: The travel path (e.g., *Cebu Port to Lipata Port to Site*).
+* **Current Leg Mode**: How it travels (*Truck*, *Barge/Boat*, *Final-Mile Road*).
+* **Material / Cargo**: The shipment travelling through that corridor.
 
----
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Occurs when a route is marked **"Delayed"** (e.g., Coast Guard has suspended boat sailings due to Typhoon Signal No. 2, or roads are blocked by landslides).
+* **⚠ Warning (Amber)**: Occurs when a route is on **"Watch"** (e.g., Gale warning, heavy rains forecasted within 24 to 48 hours).
 
-## 6. 💰 Cost & Schedule Screen (Budget vs. Spend Integration)
+#### 💥 What Happens on Site?
+* Sea barges must anchor and wait, which incurs extra daily boat rental and port fees (Demurrage).
+* Workers travelling to or from the mine for their shift rotation might get stranded in port cities.
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Activity** | Name of the Work Breakdown Structure (WBS) task. | `Primary Crusher Foundation` | Identifies the construction or maintenance job. |
-| **Cost Code** | Financial accounting control code. | `C-101` | Links physical tasks to accounting ledgers. |
-| **Budget** | Approved financial cost cap for this task. | `₱1,500,000` | Baseline budget allocated to the activity. |
-| **Committed** | Signed contracts and purchase orders issued. | `₱600,000` | Legally committed funds. |
-| **In Transit** | Freight and cargo costs currently travelling. | `₱250,000` | Logistics expenditure allocated to this job. |
-| **Installed / Earned** | Value of physically completed, inspected work on site. | `₱400,000` | Earned value representing delivered results. |
-| **Total Spend** | *Calculated automatically by the app*: `Committed + In Transit + Installed`. | `₱1,250,000` | Total money already spent or committed. |
-| **Variance** | *Calculated automatically by the app*: `Budget - Total Spend`. | `+₱250,000` (Green) / `-₱50,000` (Red) | Positive means under budget; Negative means cost overrun. |
-| **Linked Shipment** | The specific cargo shipment tied to this activity. | `Crusher Foundation Anchor Bolts` | Links material delivery delays directly to schedule tasks. |
+#### ✅ What Action is Needed?
+1. Secure sensitive cargo at regional transit hubs.
+2. Arrange temporary hotel lodging for stranded personnel at transit ports.
 
 ---
 
-## 7. 📝 Field Reporting Screen
+### Rule 3: Must-Order-By Date Passed (Procurement Lead Time)
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **Date** | Date of daily field inspection or shift report. | `Aug 28, 2026` | Logs daily progress timestamp. |
-| **Type** | Category of report: `Progress`, `Incident`, `Delivery`, `Safety`. | `Progress` | Classifies observations for management review. |
-| **Description** | Daily notes, ground conditions, progress, or issues. | `Completed rebar tying for Crusher base.` | Captures real-time qualitative site data. |
-| **Photos** | Photos captured and uploaded from site. | `[Image 1, Image 2]` | Visual evidence of completed work or site hazards. |
+#### 📱 Fields in the App Used for this Rule:
+* **Item**: Name of the material or spare part.
+* **Need By**: The required date when the material must physically sit on site ready for work.
+* **Supplier Lead (Days)**: How many days the factory takes to manufacture and pack the item.
+* **Transport Lead (Days)**: How many days it takes to ship from the supplier to the mine site.
+* **Buffer (Days)**: Extra safety days added for customs clearance or unexpected shipping delays.
+* **Must Order By (Calculated by App)**: The latest date you can place the purchase order.
+  * **Formula**: `Need By Date` minus `(Supplier Lead + Transport Lead + Buffer Days)`
+* **Status**: Procurement state (*Ordered*, *Regional Hub*, *Provincial Port*, *Site Laydown*, *Installed*).
+
+#### ⏱️ When Does It Occur?
+* This alert turns **RED (Critical)** when today's date has passed the calculated **Must-Order-By Date** and the material has **not yet been marked as "Ordered"**.
+* **Plain Example**:
+  * You need steel plates on site on **December 1**.
+  * Supplier takes **30 days** to make them.
+  * Shipping takes **15 days**.
+  * Safety buffer is **5 days**.
+  * Total lead time is **50 days**.
+  * The **Must-Order-By Date** is **October 12**.
+  * If October 13 arrives and the status is still not *Ordered*, the system immediately raises a **Critical Procurement Warning**.
+
+#### 💥 What Happens on Site?
+* If you do not order now, the material will arrive after the installation start date, shutting down the work crew.
+
+#### ✅ What Action is Needed?
+1. Release the Purchase Order (PO) to the **Primary Supplier** immediately.
+2. If the primary supplier is overloaded, switch to the **Backup Supplier** listed in the Supplier Directory.
 
 ---
 
-## 8. 🛏️ Camp Bed Matrix (Workforce Sub-View & Anti-Hot-Bedding)
+### Rule 4: Expiring Worker Certification
 
-| Field Name in App | What Does It Mean? | Example Value | Why Is It Important? |
-| :--- | :--- | :--- | :--- |
-| **ROOM / BED ID** | Specific physical room and bunk/bed number in the site camp accommodation wing. | `MH-A-01` | Pinpoints physical bed location for room allocation. |
-| **CURRENT OCCUPANT** | The worker currently assigned to the bed, or marked `Vacant`. | `Juan Dela Cruz` / `Vacant` | Identifies who is physically sleeping in the bed. |
-| **SHIFT ROTATION STATUS** | Operational rotation milestone of the current resident. | `Shift Ending (Leaving Today)`, `Mid-Roster (Active)`, `Maintenance / Cleaning`, `Ready for Assignment` | Clarifies departure timing or preparation state. |
-| **VACATING DATE** | Date when the occupant is scheduled to leave site. Extended automatically by **+24h** if outbound convoys are delayed. | `Aug 29, 2026` / `+24h Ext` | Prevents unhousing outbound crew if roads are impassable. |
-| **NEXT RESERVED OCCUPANT** | Inbound worker scheduled to take over the bed upon turnover and cleaning. | `Mark Santos (In Transit)` | Coordinates room handover between outbound and inbound crew. |
-| **BED STATUS** | Real-time physical availability and turnover state. | `🔴 Occupied`, `🟡 Pending Handover`, `🔵 Housekeeping`, `🟢 Available` | Color-coded status preventing hot-bedding and uncleaned assignments. |
-| **Check-In Inbound** | Quick action connecting an incoming worker to the bed and setting status to `🔴 Occupied`. | Action Trigger | Streamlines arrival check-in. |
-| **Send to Housekeeping** | Quick action disconnecting a departed worker and setting status to `🔵 Housekeeping`. | Action Trigger | Ensures rooms are routed for sanitization before new arrivals enter. |
-| **Sanitation Cleared** | Quick action signing off cleaning inspection and flipping status to `🟢 Available`. | Action Trigger | Marks room clean and ready for immediate booking. |
-| **Road Delay Safety Extension** | Automated logic extending vacating date by +24 hours when outbound buses or transport trucks encounter muddy roads/weather. | `+24h Delay Ext` | Protects workers from being evicted while waiting for transit. |
+#### 📱 Fields in the App Used for this Rule:
+* **Worker**: Full name of the employee or technician.
+* **Trade / Role**: Their assigned job (e.g., *Crane Operator*, *High Voltage Electrician*, *Heavy Equipment Mechanic*).
+* **Certification**: The mandatory safety or government license (e.g., *TESDA Crane NC II*, *DOLE Safety Officer*).
+* **Cert Expiry**: The official expiration date on their license card.
+* **Rotation Out**: The date when this worker is scheduled to fly out from the site for their rest days.
+* **Alert Window**: How many days before expiry the app starts notifying you (default is **30 days**).
 
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Triggers when the certificate has **7 days or fewer** remaining before expiring.
+* **⚠ Warning (Amber)**: Triggers when the certificate has **between 8 and 30 days** remaining.
+
+#### 💥 What Happens on Site?
+* Mine safety regulations strictly prohibit uncertified operators from running heavy equipment.
+* If a crane operator's license expires while on site, the crane cannot operate, stopping all heavy lifting work.
+
+#### ✅ What Action is Needed?
+1. Check if the worker is scheduled to fly out (**Rotation Out**) before the license expires.
+2. Schedule their renewal test during their off-rotation rest period, or bring in a certified backup operator.
+
+---
+
+### Rule 5: Low Fuel Stock (Site Autonomy Depletion)
+
+#### 📱 Fields in the App Used for this Rule:
+* **Current Fuel Stock (L)**: Total liters of diesel currently in the main site storage tanks.
+* **Liters Consumed**: Daily fuel drawn by generators, excavators, and dump trucks recorded in the Fuel Log.
+* **Average Daily Consumption (Calculated)**: The average liters burned per day across all logged entries.
+* **Days of Fuel Remaining (Calculated)**: `Current Fuel Stock` divided by `Average Daily Consumption`.
+* **Alert Threshold (Days)**: Minimum safety runway (configured in Settings, default is **7 days**).
+
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red)**: Triggers when remaining fuel is down to **3 days or less**.
+* **⚠ Warning (Amber)**: Triggers when remaining fuel is between **4 and 7 days**.
+* **Plain Example**:
+  * The site tanks have **28,000 Liters** of diesel.
+  * The site burns an average of **7,000 Liters per day**.
+  * Fuel runway is **4 days** ($28,000 \div 7,000$).
+  * Since 4 days is less than the 7-day safety threshold, the system raises a **Fuel Warning**.
+
+#### 💥 What Happens on Site?
+* If fuel runs out, the main power generators stop, shutting down processing mills, water treatment, camp lights, and mobile heavy equipment.
+
+#### ✅ What Action is Needed?
+1. Expedite the next fuel tanker barge or road tanker delivery immediately.
+2. If delivery is delayed, turn off non-essential camp air conditioners and prioritize primary power for processing equipment.
+
+---
+
+### Rule 6: Activity Budget Cost Overrun
+
+#### 📱 Fields in the App Used for this Rule:
+* **Activity**: Name of the construction or maintenance job (e.g., *Primary Crusher Foundation*).
+* **Cost Code**: The financial accounting code (e.g., `C-101`, `M-204`).
+* **Budget**: The approved maximum money allocated for this activity.
+* **Committed**: Purchase orders and contractor contracts already signed.
+* **In Transit**: Freight and shipping costs currently on the way.
+* **Installed / Earned**: Work already completed and paid on site.
+* **Total Spent (Calculated)**: `Committed + In Transit + Installed`.
+* **Variance (Calculated)**: `Budget` minus `Total Spent`.
+
+#### ⏱️ When Does It Occur?
+* **⚠ Warning (Amber)**: Triggers whenever **Total Spent** is greater than the **Budget** (resulting in a negative variance shown in red in the app).
+* **Plain Example**:
+  * Budget is **₱1,000,000**.
+  * Committed is **₱500,000**, In-Transit is **₱200,000**, and Installed work is **₱400,000**.
+  * Total Spent is **₱1,100,000**.
+  * The activity is **₱100,000 over budget**, triggering an immediate Cost Variance Warning.
+
+#### 💥 What Happens on Site?
+* The activity is burning through money faster than planned, eating into the overall project contingency reserve.
+
+#### ✅ What Action is Needed?
+1. Review contractor invoices to check for overcharging or unapproved extra work.
+2. Request a formal management budget approval or change order if the scope of work was expanded.
+
+---
+
+### Rule 7: Camp Bed Road Delay & Handover (Anti-Hot-Bedding Safety)
+
+#### 📱 Fields in the App Used for this Rule:
+* **Room / Bed ID**: Specific bunk identifier in the site camp (e.g., `MH-A-01`, `MH-B-02`).
+* **Current Occupant**: Name of the employee or contractor currently housed in the bed.
+* **Vacating Date**: The planned date when the worker is scheduled to leave site.
+* **Road Delay Safety Extension (`roadDelayExt` / +24h Ext)**: Safety flag activated when outbound transport convoys or flights are delayed by weather, landslides, or impassable roads.
+* **Next Reserved Occupant**: The inbound technician travelling to site scheduled to take over the bed upon handover.
+* **Bed Status**: Real-time room lifecycle state (*🔴 Occupied*, *🟡 Pending Handover*, *🔵 Housekeeping*, *🟢 Available*).
+
+#### ⏱️ When Does It Occur?
+* **⛔ Critical (Red) — Road Delay Bed Extension**:
+  * Triggers when a bed has an active **Road Delay Safety Extension (+24h)**.
+  * **Plain Example**: Outbound convoy is halted due to heavy mud on the access road. Outbound occupant's stay is extended by +24 hours to prevent leaving them without a roof. Inbound worker is held in transit staging to prevent room double-booking ("hot-bedding").
+* **⚠ Warning (Amber) — Same-Day Bed Turnover**:
+  * Triggers when a bed status is **"Pending Handover"** and the **Vacating Date is Today**.
+  * **Plain Example**: Worker is vacating today; the system warns camp management that Housekeeping linen disinfection must be signed off before checking in the arriving worker.
+
+#### 💥 What Happens on Site?
+* Eliminates the risk of **hot-bedding** (assigning two workers to the same bed without sanitation).
+* Prevents evicting departing workers when outbound buses or boats cannot depart due to typhoons or road closures.
+
+#### ✅ What Action is Needed?
+1. **For Road Delay Alerts**: Keep the outbound worker safely housed in their assigned bed. Stage the incoming worker in transit staging or overflow bunks until the outbound convoy clears.
+2. **For Same-Day Handover**: As soon as the departing worker leaves, click **"Send to Housekeeping"** (🔵). Once cleaned and disinfected, click **"Sanitation Cleared"** (🟢) before using **"Check-In Inbound"** (🔴).
+
+---
+
+### 📅 Bonus: Workforce Daily Attendance & Time Tracking
+
+#### 📱 Fields in the App:
+* **Selected Date**: Switch easily between **Today**, **Yesterday**, or pick any date from the calendar.
+* **Worker & Trade**: Worker full name and job role.
+* **Attendance Status**:
+  * 🟢 **Present**: Worked a full normal shift.
+  * 🟡 **Late**: Arrived late or worked a partial shift.
+  * 🔴 **Absent**: Did not report for duty on their scheduled shift day.
+  * ⚪ **Off Rotation**: Worker is currently home on their rest cycle.
+* **Time In**: Actual time the worker clocked in for the shift (e.g., `07:00`).
+* **Time Out**: Actual time the worker clocked out at the end of the shift (e.g., `17:00`).
+* **Hours Worked**: The app automatically computes total shift hours (e.g., `07:00` to `17:00` = `10.0 hours`).
+* **Notes / Work Area**: Specific location or task (e.g., *Crusher foundation formwork*, *Night shift OT*).
